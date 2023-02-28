@@ -63,6 +63,7 @@ pub fn constraint_bit_length<E: Engine, CS: ConstraintSystem<E>>(
         Num::Constant(value) => {
             let bits = value.into_repr().num_bits() as usize;
             assert!(bits <= num_bits);
+            todo!();
         }
     };
 
