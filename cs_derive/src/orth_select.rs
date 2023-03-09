@@ -61,17 +61,18 @@ pub(crate) fn derive_orthogonal_select(input: proc_macro::TokenStream) -> proc_m
         _ => abort_call_site!("only struct types are allowed!"),
     }
 
-    let comma = Comma(Span::call_site());    
+    let comma = Comma(Span::call_site());
     let mut function_generic_params = Punctuated::new();
 
     let engine_generic_param = syn::parse_str::<GenericParam>(&"E: Engine").unwrap();
-    let has_engine_param  = has_engine_generic_param(&generics.params, &engine_generic_param);
+    let has_engine_param = has_engine_generic_param(&generics.params, &engine_generic_param);
     if has_engine_param == false {
         generics.params.insert(0, engine_generic_param.clone());
         generics.params.push_punct(comma.clone());
     }
-    
-    let type_params_of_allocated_struct = get_type_params_from_generics(&generics, &comma, has_engine_param == false);
+
+    let type_params_of_allocated_struct =
+        get_type_params_from_generics(&generics, &comma, has_engine_param == false);
 
     // add CS to func generic params
     let cs_generic_param = syn::parse_str::<GenericParam>(&"CS: ConstraintSystem<E>").unwrap();
@@ -84,7 +85,6 @@ pub(crate) fn derive_orthogonal_select(input: proc_macro::TokenStream) -> proc_m
         gt_token: Some(syn::token::Gt(Span::call_site())),
         where_clause: None,
     };
-
 
     let expanded = quote! {
         impl#generics CircuitOrthogonalSelectable<E> for #ident<#type_params_of_allocated_struct>{

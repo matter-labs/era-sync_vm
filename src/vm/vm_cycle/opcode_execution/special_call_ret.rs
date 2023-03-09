@@ -428,6 +428,13 @@ pub(crate) fn apply_specialized_call_ret<
     let mut new_flags = common_opcode_state.reseted_flags;
     new_flags.overflow_or_less_than = is_ret_panic_if_apply;
 
+    witness_oracle.report_new_callstack_frame(
+        &new_callstack.current_context.saved_context,
+        new_callstack_depth,
+        &is_call_like,
+        &globally_apply,
+    );
+
     let result = OpcodePartialApplicationResult {
         marker,
         applies: globally_apply,
@@ -887,6 +894,19 @@ fn callstack_candidate_for_far_call<
         }
     }
 
+    if crate::VERBOSE_CIRCUITS && execute.get_value().unwrap_or(false) {
+        if common_abi_flags
+            .forward_fat_pointer
+            .get_value()
+            .unwrap_or(false)
+        {
+            println!(
+                "Forwarding fat pointer {:?} on return",
+                fat_ptr.create_witness().unwrap()
+            );
+        }
+    }
+
     let destination_shard = far_call_abi.shard_id;
     let caller_shard_id = current_callstack_entry.common_part.this_shard_id;
     let destination_shard =
@@ -1170,6 +1190,13 @@ fn callstack_candidate_for_far_call<
 
     growth_cost = UInt32::conditionally_select(cs, &grow_aux_heap, &aux_heap_growth, &growth_cost)?;
 
+    if crate::VERBOSE_CIRCUITS && execute.get_value().unwrap_or(false) {
+        println!(
+            "Far call uses {} ergs for memory growth",
+            growth_cost.get_value().unwrap()
+        );
+    }
+
     let (ergs_left_after_growth, uf) = opcode_carry_parts
         .preliminary_ergs_left
         .sub_using_delayed_bool_allocation(cs, &growth_cost, optimizer)?;
@@ -1195,7 +1222,6 @@ fn callstack_candidate_for_far_call<
     )?;
 
     // now we can indeed decommit
-
     let exception = smart_or(cs, &exceptions)?;
     let should_decommit = smart_and(cs, &[execute, exception.not()])?;
 
@@ -1207,6 +1233,7 @@ fn callstack_candidate_for_far_call<
     )?;
 
     let (
+        not_enough_ergs_to_decommit,
         code_memory_page,
         (new_decommittment_queue_state, new_decommittment_queue_len),
         ergs_remaining_after_decommit,
@@ -1225,6 +1252,8 @@ fn callstack_candidate_for_far_call<
         optimizer,
         witness_oracle,
     )?;
+
+    let exception = smart_or(cs, &[exception, not_enough_ergs_to_decommit])?;
 
     all_pending_sponges.extend(pending_sponges);
 
@@ -1268,6 +1297,14 @@ fn callstack_candidate_for_far_call<
 
     let remaining_ergs_if_pass = remaining_for_this_context;
     let passed_ergs_if_pass = ergs_to_pass;
+
+    if crate::VERBOSE_CIRCUITS && execute.get_value().unwrap_or(false) {
+        println!(
+            "Far call will pass {} ergs, with {} being max to pass",
+            ergs_to_pass.get_value().unwrap(),
+            max_passable.get_value().unwrap()
+        );
+    }
 
     current_callstack_entry.common_part.ergs_remaining = remaining_ergs_if_pass;
 
@@ -1587,6 +1624,7 @@ pub fn add_to_decommittment_queue<
     witness_oracle: &mut impl WitnessOracle<E>,
 ) -> Result<
     (
+        Boolean,
         UInt32<E>,
         ([Num<E>; 3], UInt32<E>),
         UInt32<E>,
@@ -1603,10 +1641,18 @@ pub fn add_to_decommittment_queue<
         .mul(cs, &num_words_in_bytecode.inner)?,
     );
 
+    if crate::VERBOSE_CIRCUITS && should_decommit.get_value().unwrap_or(false) {
+        println!(
+            "Decommitment costs {} ergs",
+            cost_of_decommittment.get_value().unwrap()
+        );
+    }
+
     let (ergs_after_decommit_may_be, uf) =
         ergs_remaining.sub_using_delayed_bool_allocation(cs, &cost_of_decommittment, optimizer)?;
 
-    let should_decommit = smart_and(cs, &[should_decommit, uf.not()])?;
+    let not_enough_ergs_to_decommit = uf;
+    let should_decommit = smart_and(cs, &[should_decommit, not_enough_ergs_to_decommit.not()])?;
 
     // if we do not decommit then we will eventually map into 0 page for 0 extra ergs
     let ergs_remaining_after_decommit = UInt32::conditionally_select(
@@ -1647,7 +1693,9 @@ pub fn add_to_decommittment_queue<
     // kind of refund if we didn't decommit
 
     let refund = smart_and(cs, &[should_decommit, is_first.not()])?;
-
+    if crate::VERBOSE_CIRCUITS && refund.get_value().unwrap_or(false) {
+        println!("WIll refund ergs for decommit");
+    }
     let ergs_remaining_after_decommit =
         UInt32::conditionally_select(cs, &refund, &ergs_remaining, &ergs_remaining_after_decommit)?;
 
@@ -1693,6 +1741,7 @@ pub fn add_to_decommittment_queue<
     )?;
 
     Ok((
+        not_enough_ergs_to_decommit,
         target_memory_page,
         (new_decommittment_queue_state, new_decommittment_queue_len),
         ergs_remaining_after_decommit,
@@ -1869,6 +1918,19 @@ fn callstack_candidate_for_ret<E: Engine, CS: ConstraintSystem<E>>(
 
     // exceptions that are specific only to return from non-local frame
     let mut non_local_frame_exceptions = vec![];
+
+    if crate::VERBOSE_CIRCUITS && execute.get_value().unwrap_or(false) {
+        if common_abi_flags
+            .forward_fat_pointer
+            .get_value()
+            .unwrap_or(false)
+        {
+            println!(
+                "Forwarding fat pointer {:?} on return",
+                fat_ptr.create_witness().unwrap()
+            );
+        }
+    }
 
     // resolve returndata pointer if forwarded
     let fat_ptr_expected_exception = smart_and(

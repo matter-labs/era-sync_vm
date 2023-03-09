@@ -1236,7 +1236,6 @@ pub fn scheduler_function<
 
     let vk_to_use = node_vk_committment;
     let input_to_use = node_closed_form_input_committment;
-    dbg!(input_to_use.get_value());
 
     let key_committments = vec![vk_to_use];
     let inputs = vec![input_to_use];
@@ -1341,6 +1340,34 @@ pub fn scheduler_function<
     let input_value = input.get_value();
     let public_input = AllocatedNum::alloc_input(cs, || Ok(input_value.grab()?))?;
     public_input.enforce_equal(cs, &input.get_variable())?;
+
+    if crate::VERBOSE_CIRCUITS {
+        match (
+            Byte::get_byte_value_multiple(&input_keccak_hash),
+            block_content_header.create_witness(),
+            Byte::get_byte_value_multiple(&this_block_content_hash),
+            Byte::get_byte_value_multiple(&data_hash),
+            Byte::get_byte_value_multiple(&meta_hash),
+            Byte::get_byte_value_multiple(&aux_hash),
+        ) {
+            (
+                Some(input_keccak_hash),
+                Some(content_header),
+                Some(block_hash),
+                Some(data_hash),
+                Some(meta_hash),
+                Some(aux_hash),
+            ) => {
+                println!("Input keccak hash = 0x{}", hex::encode(&input_keccak_hash));
+                println!("Content header = {:?}", content_header);
+                println!("Block hash = {:?}", hex::encode(&block_hash));
+                println!("Data hash = {:?}", hex::encode(&data_hash));
+                println!("Meta hash = {:?}", hex::encode(&meta_hash));
+                println!("Aux hash = {:?}", hex::encode(&aux_hash));
+            }
+            _ => {}
+        }
+    }
 
     if let Some(reporting_function) = reporting_function {
         let coordinates_bytes_witness: [[u8; 32]; 4] =

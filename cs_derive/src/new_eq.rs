@@ -1,9 +1,10 @@
-use crate::utils::{get_ident_of_field_type, get_type_params_from_generics, has_engine_generic_param};
+use crate::utils::{
+    get_ident_of_field_type, get_type_params_from_generics, has_engine_generic_param,
+};
 use proc_macro2::{Ident, Span, TokenStream};
 use proc_macro_error::abort_call_site;
 use quote::quote;
-use syn::{DeriveInput, GenericParam, Type, parse_macro_input, token::Comma};
-
+use syn::{parse_macro_input, token::Comma, DeriveInput, GenericParam, Type};
 
 pub(crate) fn derive_eq(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let derived_input = parse_macro_input!(input as DeriveInput);
@@ -31,11 +32,11 @@ pub(crate) fn derive_eq(input: proc_macro::TokenStream) -> proc_macro::TokenStre
                         let equality = match field.ty {
                             Type::Array(ref ty) => {
                                 match *ty.elem {
-                                    Type::Path(ref _p) => {},
+                                    Type::Path(ref _p) => {}
                                     _ => abort_call_site!("only array of elements is allowed here"),
                                 };
 
-                                let eq = quote!{
+                                let eq = quote! {
                                     let #field_ident = self.#field_ident.iter().zip(other.#field_ident.iter()).map(|(t, o)| CircuitEq::<E>::eq(t, &o)).all(|r| r);
                                 };
 
@@ -68,7 +69,6 @@ pub(crate) fn derive_eq(input: proc_macro::TokenStream) -> proc_macro::TokenStre
                                 //         self.#field_ident.eq(&other.#field_ident)
                                 //     }
                                 // }
-
                             }
                             _ => abort_call_site!("only array and path types are allowed"),
                         };
@@ -91,7 +91,8 @@ pub(crate) fn derive_eq(input: proc_macro::TokenStream) -> proc_macro::TokenStre
         generics.params.insert(0, engine_generic_param.clone());
     }
 
-    let type_params_of_allocated_struct = get_type_params_from_generics(&generics, &comma, has_engine_param == false);
+    let type_params_of_allocated_struct =
+        get_type_params_from_generics(&generics, &comma, has_engine_param == false);
 
     let expanded = quote! {
         impl#generics CircuitEq<E> for #ident<#type_params_of_allocated_struct>{

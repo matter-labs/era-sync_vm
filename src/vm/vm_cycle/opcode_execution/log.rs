@@ -450,6 +450,13 @@ pub(crate) fn apply<
         &ergs_to_burn,
     )?;
 
+    if crate::VERBOSE_CIRCUITS && should_apply.get_value().unwrap_or(false) {
+        println!(
+            "Burning {} ergs as part of LOG",
+            ergs_to_burn.get_value().unwrap()
+        );
+    }
+
     let (ergs_remaining, uf) = opcode_carry_parts
         .preliminary_ergs_left
         .sub_using_delayed_bool_allocation(cs, &ergs_to_burn, optimizer)?;

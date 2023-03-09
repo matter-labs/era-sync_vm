@@ -28,8 +28,6 @@ pub fn vm_cycle<
 
     let mut ctx = OptimizationContext::empty();
 
-    // add carry from the potentially pending UMA
-
     // we modified a state just enough to properly capture small properties changes like PC and SP
 
     for marker in ALL_OPCODE_MARKERS.iter() {

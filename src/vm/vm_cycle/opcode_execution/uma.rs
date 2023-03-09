@@ -273,6 +273,13 @@ pub(crate) fn apply<
         &growth_cost,
     )?;
 
+    if crate::VERBOSE_CIRCUITS && should_apply.get_value().unwrap_or(false) {
+        println!(
+            "Memory growth used {} ergs",
+            growth_cost.get_value().unwrap()
+        );
+    }
+
     let (ergs_left_after_growth, uf) = opcode_carry_parts
         .preliminary_ergs_left
         .sub_using_delayed_bool_allocation(cs, &growth_cost, optimizer)?;

@@ -85,8 +85,6 @@ impl<E: Engine, I: FixedLengthEncodable<E, N> + FixedLengthDecodable<E, N>, cons
         _round_function: &R,
     ) -> E::Fr {
         unimplemented!();
-        // TODO
-        // round_function.simulate_absorb_multiple_rounds_into_empty_with_specialization(&input).last().expect("intermediate state")[0]
     }
 
     pub fn get_tail_state(&self) -> E::Fr {

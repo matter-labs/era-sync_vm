@@ -781,8 +781,6 @@ pub fn aggregation_step<
         g2_elements,
     ) {
         (Some(pair_with_generator), Some(pair_with_x), Some(g2_elements)) => {
-            // dbg!(&pair_with_generator);
-            // dbg!(&pair_with_x);
             let valid = E::final_exponentiation(&E::miller_loop(&[
                 (&pair_with_generator.prepare(), &g2_elements[0].prepare()),
                 (&pair_with_x.prepare(), &g2_elements[1].prepare()),

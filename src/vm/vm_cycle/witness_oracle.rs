@@ -54,6 +54,13 @@ pub trait WitnessOracle<E: Engine>:
         timestamp: UInt32<E>,
         execute: &Boolean,
     ) -> Option<E::Fr>;
+    fn report_new_callstack_frame(
+        &mut self,
+        new_callstack: &ExecutionContextRecord<E>,
+        new_depth: UInt32<E>,
+        is_call: &Boolean,
+        execute: &Boolean,
+    );
     fn push_callstack_witness(
         &mut self,
         current_record: &ExecutionContextRecord<E>,

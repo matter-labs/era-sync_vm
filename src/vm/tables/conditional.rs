@@ -15,10 +15,6 @@ pub struct ConditionalResolutionTable<E: Engine> {
 
 pub const FLAGS_PACKED_ENCODING_BIT_WIDTH: usize = 3;
 
-pub(crate) fn flags_into_integer(of: bool, eq: bool, gt: bool) -> u8 {
-    (of as u8) | ((eq as u8) << 1) | ((gt as u8) << 1)
-}
-
 pub(crate) fn integer_into_flags(encoding: u8) -> (bool, bool, bool) {
     (
         (encoding & 0x1) != 0,

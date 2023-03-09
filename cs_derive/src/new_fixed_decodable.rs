@@ -1,13 +1,11 @@
 use proc_macro2::{Span, TokenStream};
-use syn::{Ident, DeriveInput, parse_macro_input, token::Comma};
 use quote::quote;
+use syn::{parse_macro_input, token::Comma, DeriveInput, Ident};
 
 use crate::new_utils::{get_type_params_from_generics, prepend_engine_param_if_not_exist};
 
-
-fn derive_fixed_len_decodable_ext_impl(original_struct: &DeriveInput) -> TokenStream{
-    let DeriveInput{
-        
+fn derive_fixed_len_decodable_ext_impl(original_struct: &DeriveInput) -> TokenStream {
+    let DeriveInput {
         ident,
         mut generics,
         ..
@@ -17,9 +15,10 @@ fn derive_fixed_len_decodable_ext_impl(original_struct: &DeriveInput) -> TokenSt
 
     prepend_engine_param_if_not_exist(&mut generics);
 
-    let enconding_length_constant_ident = syn::parse_str::<Ident>(&format!("{}CircuitEncodingLength", ident)).unwrap();
+    let enconding_length_constant_ident =
+        syn::parse_str::<Ident>(&format!("{}CircuitEncodingLength", ident)).unwrap();
 
-    quote!{
+    quote! {
         impl#generics CircuitFixedLengthDecodableExt<E, #enconding_length_constant_ident> for #ident<#type_params> {
             fn allocate_and_prove_encoding<CS: ConstraintSystem<E>>(cs: &mut CS, values: &[Num<E>; #enconding_length_constant_ident], witness: Option<Self::Witness>) -> Result<Self, SynthesisError> {
                 let new = Self::allocate(cs, witness)?;
@@ -51,13 +50,12 @@ fn derive_fixed_len_decodable_ext_impl(original_struct: &DeriveInput) -> TokenSt
     }
 }
 
-
-pub(crate) fn derive_decodable(input: proc_macro::TokenStream) -> proc_macro::TokenStream{
+pub(crate) fn derive_decodable(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let derived_input = parse_macro_input!(input as DeriveInput);
 
     let fixed_len_decodable_ext_impl = derive_fixed_len_decodable_ext_impl(&derived_input);
 
-    let expanded = quote!{
+    let expanded = quote! {
         #fixed_len_decodable_ext_impl
     };
 

@@ -138,6 +138,9 @@ pub fn partially_decode_from_uint64_and_resolve_condition<E: Engine, CS: Constra
             let unused_bit_1 = (unused_bits >> 1) & 1 > 0;
             let condition = variant_and_condition >> CONDITIONAL_BITS_SHIFT;
 
+            // dbg!(&zkevm_opcode_defs::OPCODES_TABLE[variant as usize]);
+            // dbg!(&condition);
+
             let rest = wit >> VARIANT_AND_CONDITION_ENCODING_BITS;
             (
                 Some(variant),

@@ -57,6 +57,13 @@ pub fn perform_initial_decoding<E: Engine, CS: ConstraintSystem<E>>(
     // set ergs cost to 0 if we are skipping cycle
     let masked_ergs_cost = UInt32::from_num_unchecked(initial_decoding.ergs_cost.inner)
         .mask(cs, &did_skip_cycle.not())?;
+    if crate::VERBOSE_CIRCUITS {
+        println!(
+            "Have {} ergs left, opcode uses {:?} ergs",
+            ergs_left.get_value().unwrap(),
+            masked_ergs_cost.get_value()
+        );
+    }
     let (ergs_left, out_of_ergs_exception) =
         ergs_left.sub_using_delayed_bool_allocation(cs, &masked_ergs_cost, optimizer)?;
     let ergs_left = ergs_left.mask(cs, &out_of_ergs_exception.not())?; // it's 0 if mask is 0, otherwise initial value

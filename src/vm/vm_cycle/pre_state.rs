@@ -38,15 +38,31 @@ pub fn create_prestate<
     let should_skip_cycle = smart_or(cs, &[execution_has_ended, is_any_pending])?;
     let pending_exception = current_state.pending_exception;
 
+    if crate::VERBOSE_CIRCUITS {
+        println!("New cycle");
+    }
+
     if crate::VERBOSE_CIRCUITS && should_skip_cycle.get_value().unwrap_or(false) {
         println!("Skipping cycle");
+        if is_any_pending.get_value().unwrap_or(false) {
+            println!("Skip from pending");
+        }
     }
+
     // we should even try to perform a read only if we have something to do this cycle. So We should not skip
     // cycle or have some pending operation
     let should_try_to_read_opcode =
         smart_and(cs, &[should_skip_cycle.not(), pending_exception.not()])?;
     let execute_pending_exception_at_this_cycle =
         smart_and(cs, &[should_skip_cycle.not(), pending_exception])?;
+
+    if crate::VERBOSE_CIRCUITS
+        && execute_pending_exception_at_this_cycle
+            .get_value()
+            .unwrap_or(false)
+    {
+        println!("Execute pending exception cycle");
+    }
 
     current_state.pending_exception = Boolean::conditionally_select(
         cs,

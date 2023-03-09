@@ -1,9 +1,9 @@
 use proc_macro2::Span;
-use syn::{GenericParam, Type, TypeArray, TypeParam, TypePath, punctuated::Punctuated};
 use syn::*;
+use syn::{punctuated::Punctuated, GenericParam, Type, TypeArray, TypeParam, TypePath};
 
 #[test]
-fn test_type_path() {    
+fn test_type_path() {
     {
         let original_path: Path = syn::parse_str(&"E::Fr").unwrap();
 
@@ -109,7 +109,8 @@ fn test_equivalent_type() {
         );
     }
     {
-        let original_type = syn::parse_str::<Type>(&"[[SmallFixedInteger<E, U160>; 2]; 3]").unwrap();
+        let original_type =
+            syn::parse_str::<Type>(&"[[SmallFixedInteger<E, U160>; 2]; 3]").unwrap();
         let expected_type = Type::Array(syn::parse_str(&"[[E::Fr; 2]; 3]").unwrap());
         let expected_type_param1 = syn::parse_str::<TypeParam>(&"E: Engine").unwrap();
 
@@ -119,7 +120,7 @@ fn test_equivalent_type() {
         assert_eq!(
             GenericParam::Type(expected_type_param1),
             actual_type_param.unwrap()
-        );        
+        );
     }
 
     {

@@ -1,18 +1,19 @@
 use proc_macro2::{Ident, Span, TokenStream};
 
-use quote::{quote};
-use syn::{DeriveInput, parse_macro_input, token::{Comma}};
+use quote::quote;
+use syn::{parse_macro_input, token::Comma, DeriveInput};
 
-use crate::{new_utils::{prepend_engine_param_if_not_exist, get_type_params_from_generics}};
+use crate::new_utils::{get_type_params_from_generics, prepend_engine_param_if_not_exist};
 
-pub(crate) fn derive_decodable(input: proc_macro::TokenStream, len_expression: TokenStream) -> proc_macro::TokenStream {
+pub(crate) fn derive_decodable(
+    input: proc_macro::TokenStream,
+    len_expression: TokenStream,
+) -> proc_macro::TokenStream {
     let derived_input = parse_macro_input!(input as DeriveInput);
 
-    let DeriveInput{
-        
+    let DeriveInput {
         ident,
         mut generics,
-        
         ..
     } = derived_input;
 
@@ -20,10 +21,14 @@ pub(crate) fn derive_decodable(input: proc_macro::TokenStream, len_expression: T
 
     prepend_engine_param_if_not_exist(&mut generics);
 
-    let inner_const_ident = syn::parse_str::<Ident>(&format!("__{}_circuit_decoding_len_inner", ident).to_lowercase()).unwrap();
-    let private_mod_ident = syn::parse_str::<Ident>(&format!("__{}_private_consts_decodable", ident).to_lowercase()).unwrap();
+    let inner_const_ident =
+        syn::parse_str::<Ident>(&format!("__{}_circuit_decoding_len_inner", ident).to_lowercase())
+            .unwrap();
+    let private_mod_ident =
+        syn::parse_str::<Ident>(&format!("__{}_private_consts_decodable", ident).to_lowercase())
+            .unwrap();
 
-    let expanded = quote!{
+    let expanded = quote! {
         mod #private_mod_ident {
             use super::*;
 

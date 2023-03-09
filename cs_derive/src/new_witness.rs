@@ -1,10 +1,15 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use proc_macro_error::abort_call_site;
-use quote::{quote};
-use syn::{Data, DeriveInput, Fields, Field, GenericParam, Generics, Type, parse_macro_input, punctuated::Punctuated, token::{Comma}};
+use quote::quote;
+use syn::{
+    parse_macro_input, punctuated::Punctuated, token::Comma, Data, DeriveInput, Field, Fields,
+    GenericParam, Generics, Type,
+};
 
-use crate::{new_utils::{get_equivalent_type, get_type_params_from_generics, get_witness_ident, get_empty_field_initialization_of_type}};
-
+use crate::new_utils::{
+    get_empty_field_initialization_of_type, get_equivalent_type, get_type_params_from_generics,
+    get_witness_ident,
+};
 
 pub(crate) fn derive_witness(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -28,8 +33,7 @@ pub(crate) fn derive_witness(input: proc_macro::TokenStream) -> proc_macro::Toke
     TokenStream::from(expanded).into()
 }
 
-pub(crate) fn derive_witness_struct(derived_input: DeriveInput) -> DeriveInput{
-
+pub(crate) fn derive_witness_struct(derived_input: DeriveInput) -> DeriveInput {
     let DeriveInput {
         vis,
         ident,
@@ -58,10 +62,10 @@ pub(crate) fn derive_witness_struct(derived_input: DeriveInput) -> DeriveInput{
                         ty: Type::Path(syn::parse_str("std::marker::PhantomData<E>").unwrap()),
                     };
                     fields.named.push_value(marker_field);
-                },
+                }
                 _ => abort_call_site!("only named fields are allowed"),
             }
-        },
+        }
         _ => abort_call_site!("only structs are allowed"),
     };
 
@@ -93,16 +97,16 @@ pub(crate) fn derive_witness_struct(derived_input: DeriveInput) -> DeriveInput{
     }
 }
 
-fn derive_witnessed_impl(derived_input: DeriveInput) -> TokenStream{
+fn derive_witnessed_impl(derived_input: DeriveInput) -> TokenStream {
     let ident = &derived_input.ident;
     let witness_ident = get_witness_ident(&ident);
     let generics = &derived_input.generics;
     let type_params = get_type_params_from_generics(generics, &Comma(Span::call_site()), false);
-    let mut type_params_witness = get_type_params_from_generics(generics, &Comma(Span::call_site()), true);
+    let mut type_params_witness =
+        get_type_params_from_generics(generics, &Comma(Span::call_site()), true);
     type_params_witness.insert(0, syn::parse_str("E").unwrap());
 
     let witnessed_ident = syn::parse_str::<Ident>(&format!("{}CSWitnessed", ident)).unwrap();
-
 
     let comma = Comma(Span::call_site());
     let mut extended_generic_params = Punctuated::new();
@@ -121,7 +125,7 @@ fn derive_witnessed_impl(derived_input: DeriveInput) -> TokenStream{
         where_clause: None,
     };
 
-    quote!{
+    quote! {
         pub trait #witnessed_ident#extended_generics {
             type Witness: Clone + std::fmt::Debug;
         }
@@ -131,47 +135,43 @@ fn derive_witnessed_impl(derived_input: DeriveInput) -> TokenStream{
     }
 }
 
-fn derive_empty_fn(input: &DeriveInput) -> TokenStream{
-
-    let DeriveInput{
+fn derive_empty_fn(input: &DeriveInput) -> TokenStream {
+    let DeriveInput {
         generics,
         ident,
         data,
         ..
-    }  = input.clone();
+    } = input.clone();
 
     let mut field_initializations = TokenStream::new();
 
     match data {
-        Data::Struct(ref struct_data) => {
-            match struct_data.fields {
-                Fields::Named(ref fields) => {
-                    for field in fields.named.iter() {
-                        let field_ident = field.ident.clone().expect("a field ident");
-                        let empty_initialization =
-                            if field_ident == syn::parse_str::<Ident>("_marker").unwrap() {
-                                quote!{
-                                    _marker: std::marker::PhantomData,
-                                }
-                            } else {
-                                let field_init = get_empty_field_initialization_of_type(&field.ty);
-                                quote!{
-                                    #field_ident: #field_init,
-                                }
-                            };
-                        field_initializations.extend(empty_initialization);
-                    }
-
-                },
-                _ => abort_call_site!("only named fields are allowed"),
+        Data::Struct(ref struct_data) => match struct_data.fields {
+            Fields::Named(ref fields) => {
+                for field in fields.named.iter() {
+                    let field_ident = field.ident.clone().expect("a field ident");
+                    let empty_initialization =
+                        if field_ident == syn::parse_str::<Ident>("_marker").unwrap() {
+                            quote! {
+                                _marker: std::marker::PhantomData,
+                            }
+                        } else {
+                            let field_init = get_empty_field_initialization_of_type(&field.ty);
+                            quote! {
+                                #field_ident: #field_init,
+                            }
+                        };
+                    field_initializations.extend(empty_initialization);
+                }
             }
+            _ => abort_call_site!("only named fields are allowed"),
         },
         _ => abort_call_site!("only structs are allowed"),
     };
 
     let type_params = get_type_params_from_generics(&generics, &Comma(Span::call_site()), false);
 
-    quote!{
+    quote! {
         impl#generics #ident<#type_params> {
             pub fn empty() -> Self{
                 use num_traits::Zero;
@@ -184,12 +184,12 @@ fn derive_empty_fn(input: &DeriveInput) -> TokenStream{
     }
 }
 
-fn derive_default_impl(derived_input: &DeriveInput) -> TokenStream{
+fn derive_default_impl(derived_input: &DeriveInput) -> TokenStream {
     let ident = &derived_input.ident;
     let generics = &derived_input.generics;
     let type_params = get_type_params_from_generics(generics, &Comma(Span::call_site()), false);
 
-    quote!{
+    quote! {
         impl#generics Default for #ident<#type_params>{
             fn default() -> Self{
                 Self::empty()

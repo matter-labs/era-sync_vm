@@ -462,6 +462,7 @@ impl<E: Engine, W: WidthMarker> CSAllocatable<E> for SmallFixedWidthInteger<E, W
         cs: &mut CS,
         witness: Option<Self::Witness>,
     ) -> Result<Self, SynthesisError> {
+        // FIXME: Handle witness types other then u160
         Self::allocate(cs, witness)
     }
 }

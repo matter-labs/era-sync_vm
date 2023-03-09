@@ -1,16 +1,16 @@
 use proc_macro2::{Span, TokenStream};
-use syn::{DeriveInput, Ident, parse_macro_input, token::Comma};
 use quote::quote;
+use syn::{parse_macro_input, token::Comma, DeriveInput, Ident};
 
+use crate::{
+    new_utils::{get_type_params_from_generics, prepend_engine_param_if_not_exist},
+    new_witness::derive_witness_struct,
+};
 
-use crate::{new_utils::{get_type_params_from_generics, prepend_engine_param_if_not_exist}, new_witness::derive_witness_struct};
-
-fn derive_fixed_len_encodable_impl(original_struct: &DeriveInput) -> TokenStream{
-    let DeriveInput{
-        
+fn derive_fixed_len_encodable_impl(original_struct: &DeriveInput) -> TokenStream {
+    let DeriveInput {
         ident,
         mut generics,
-        
         ..
     } = original_struct.clone();
 
@@ -18,23 +18,24 @@ fn derive_fixed_len_encodable_impl(original_struct: &DeriveInput) -> TokenStream
 
     prepend_engine_param_if_not_exist(&mut generics);
 
-    let enconding_length_constant_ident = syn::parse_str::<Ident>(&format!("{}CircuitEncodingLength", ident)).unwrap();
+    let enconding_length_constant_ident =
+        syn::parse_str::<Ident>(&format!("{}CircuitEncodingLength", ident)).unwrap();
 
-    quote!{
+    quote! {
         impl#generics CircuitFixedLengthEncodable<E, #enconding_length_constant_ident> for #ident<#type_params> {
             fn encode<CS: ConstraintSystem<E>>(&self, cs: &mut CS) -> Result<[Num<E>; #enconding_length_constant_ident], SynthesisError> {
                 Ok(self.pack(cs)?)
             }
             // we don't need this function by default
             // fn encoding_witness(&self) -> Option<[E::Fr; #enconding_length_constant_ident]> {
+            //     todo!()
             // }
         }
     }
 }
 
-fn derive_fixed_len_encodable_ext_impl(original_struct: &DeriveInput) -> TokenStream{
-    let DeriveInput{
-        
+fn derive_fixed_len_encodable_ext_impl(original_struct: &DeriveInput) -> TokenStream {
+    let DeriveInput {
         ident,
         mut generics,
         ..
@@ -50,9 +51,10 @@ fn derive_fixed_len_encodable_ext_impl(original_struct: &DeriveInput) -> TokenSt
 
     prepend_engine_param_if_not_exist(&mut generics);
 
-    let enconding_length_constant_ident = syn::parse_str::<Ident>(&format!("{}CircuitEncodingLength", ident)).unwrap();
+    let enconding_length_constant_ident =
+        syn::parse_str::<Ident>(&format!("{}CircuitEncodingLength", ident)).unwrap();
 
-    quote!{
+    quote! {
         impl#generics CircuitFixedLengthEncodableExt<E, #enconding_length_constant_ident> for #ident<#type_params> {
             type Witness = #witness_ident<#witness_type_params>;
 
@@ -67,14 +69,13 @@ fn derive_fixed_len_encodable_ext_impl(original_struct: &DeriveInput) -> TokenSt
     }
 }
 
-
-pub(crate) fn derive_encodable(input: proc_macro::TokenStream) -> proc_macro::TokenStream{
+pub(crate) fn derive_encodable(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let derived_input = parse_macro_input!(input as DeriveInput);
 
     let fixed_len_encodable_impl = derive_fixed_len_encodable_impl(&derived_input);
     let fixed_len_encodable_ext_impl = derive_fixed_len_encodable_ext_impl(&derived_input);
 
-    let expanded = quote!{
+    let expanded = quote! {
         #fixed_len_encodable_impl
         #fixed_len_encodable_ext_impl
     };

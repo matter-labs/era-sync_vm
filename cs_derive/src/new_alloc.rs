@@ -1,13 +1,23 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use proc_macro_error::abort_call_site;
 use quote::quote;
-use syn::{DeriveInput, GenericParam, Generics, Type, TypeArray, TypePath, parse_macro_input, punctuated::Punctuated, token::Comma};
+use syn::{
+    parse_macro_input, punctuated::Punctuated, token::Comma, DeriveInput, GenericParam, Generics,
+    Type, TypeArray, TypePath,
+};
 
-use crate::{new_utils::{get_base_type_allocation_fn_name_by_ident, get_ident_of_field_type, get_type_params_from_generics, get_type_path_of_field, get_witness_ident, has_engine_generic_param, get_empty_path_field_allocation_of_type}, new_witness::derive_witness_struct};
+use crate::{
+    new_utils::{
+        get_base_type_allocation_fn_name_by_ident, get_empty_path_field_allocation_of_type,
+        get_ident_of_field_type, get_type_params_from_generics, get_type_path_of_field,
+        get_witness_ident, has_engine_generic_param,
+    },
+    new_witness::derive_witness_struct,
+};
 
 pub(crate) fn derive_alloc(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let derived_input = parse_macro_input!(input as DeriveInput);
-    let DeriveInput{
+    let DeriveInput {
         ident,
         generics,
         data,
@@ -26,16 +36,16 @@ pub(crate) fn derive_alloc(input: proc_macro::TokenStream) -> proc_macro::TokenS
                 for field in named_fields.named.iter() {
                     let field_ident = field.ident.clone().expect("should have a field elem ident");
                     match field.ty {
-                        Type::Array( ref array_ty) =>  {
+                        Type::Array(ref array_ty) => {
                             let (array_init, alloc) = derive_from_array(&field_ident, array_ty);
                             array_initializations.extend(array_init);
                             array_initializations_for_allocation.extend(alloc);
-                        },
-                        Type::Path(ref ty_path) =>  {
+                        }
+                        Type::Path(ref ty_path) => {
                             let (empty, alloc) = derive_from_path(&field_ident, ty_path);
                             field_initializations_for_empty_fn.extend(empty);
                             field_initializations_for_allocation.extend(alloc);
-                        },
+                        }
                         _ => abort_call_site!("only array and path types are allowed"),
                     };
 
@@ -76,7 +86,8 @@ pub(crate) fn derive_alloc(input: proc_macro::TokenStream) -> proc_macro::TokenS
     };
 
     let type_params_of_allocated_struct = get_type_params_from_generics(&generics, &comma, false);
-    let type_params_of_witness_struct = get_type_params_from_generics(&witness_struct.generics, &comma, false);
+    let type_params_of_witness_struct =
+        get_type_params_from_generics(&witness_struct.generics, &comma, false);
 
     let expanded = quote! {
         impl#generics #ident<#type_params_of_allocated_struct>{
@@ -114,9 +125,9 @@ pub(crate) fn derive_alloc(input: proc_macro::TokenStream) -> proc_macro::TokenS
     proc_macro::TokenStream::from(expanded)
 }
 
-fn derive_from_array(ident: &Ident, ty: &TypeArray) -> (TokenStream, TokenStream){
+fn derive_from_array(ident: &Ident, ty: &TypeArray) -> (TokenStream, TokenStream) {
     match *ty.elem {
-        Type::Path(ref _p) => {},
+        Type::Path(ref _p) => {}
         _ => abort_call_site!("only array of elements is allowed here"),
     };
 
@@ -124,15 +135,16 @@ fn derive_from_array(ident: &Ident, ty: &TypeArray) -> (TokenStream, TokenStream
     let ty_arr = Type::Array(ty.clone());
     let ty_path = get_type_path_of_field(&ty_arr);
     let ty_ident = get_ident_of_field_type(&ty_arr);
-    let fn_ident =
-        if let Some(base_type_allocation_fn) = get_base_type_allocation_fn_name_by_ident(&ty_path) {
-            base_type_allocation_fn
-        } else {
-            syn::parse_str("allocate").unwrap()
-        };
+    let fn_ident = if let Some(base_type_allocation_fn) =
+        get_base_type_allocation_fn_name_by_ident(&ty_path)
+    {
+        base_type_allocation_fn
+    } else {
+        syn::parse_str("allocate").unwrap()
+    };
 
     let empty = get_empty_path_field_allocation_of_type(&ty_path);
-    let empty = quote!{
+    let empty = quote! {
         let mut #ident: #ty_arr = vec![#empty; #len].try_into().unwrap();
     };
 
@@ -147,7 +159,7 @@ fn derive_from_array(ident: &Ident, ty: &TypeArray) -> (TokenStream, TokenStream
     (empty, alloc)
 }
 
-fn derive_from_path(ident: &Ident, ty: &TypePath) -> (TokenStream,TokenStream){
+fn derive_from_path(ident: &Ident, ty: &TypePath) -> (TokenStream, TokenStream) {
     let elem_ident = get_ident_of_field_type(&Type::Path(ty.clone()));
     let fn_ident =
         if let Some(base_type_allocation_fn) = get_base_type_allocation_fn_name_by_ident(&ty) {

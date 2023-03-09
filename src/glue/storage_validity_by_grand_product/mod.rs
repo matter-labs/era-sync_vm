@@ -889,6 +889,7 @@ pub fn pack_key<E: Engine, CS: ConstraintSystem<E>>(
     cs: &mut CS,
     key_tuple: (Byte<E>, UInt160<E>, UInt256<E>),
 ) -> Result<[Num<E>; 2], SynthesisError> {
+    assert!(E::Fr::CAPACITY >= 232);
     let shifts = compute_shifts::<E::Fr>();
 
     // LE packing
@@ -904,7 +905,7 @@ pub fn pack_key<E: Engine, CS: ConstraintSystem<E>>(
     let mut lc_1 = LinearCombination::zero();
     lc_1.add_assign_number_with_coeff(&key.inner[3].inner, shifts[0]);
     lc_1.add_assign_number_with_coeff(&address.inner, shifts[64]);
-    lc_1.add_assign_number_with_coeff(&shard_id.inner, shifts[160]);
+    lc_1.add_assign_number_with_coeff(&shard_id.inner, shifts[160 + 64]);
     let value_1 = lc_1.into_num(cs)?;
     // 64 + 160 + 8 = 232 in total
 

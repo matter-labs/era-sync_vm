@@ -1,15 +1,20 @@
 use proc_macro2::{Span, TokenStream};
-use syn::{Generics, GenericParam, punctuated::Punctuated, DeriveInput, Ident, Type, parse_macro_input, token::Comma};
-use quote::quote;
 use proc_macro_error::abort_call_site;
+use quote::quote;
+use syn::{
+    parse_macro_input, punctuated::Punctuated, token::Comma, DeriveInput, GenericParam, Generics,
+    Ident, Type,
+};
 
-use crate::{new_utils::{get_packing_function_of_type, has_engine_generic_param, get_type_params_from_generics, get_encoding_length_expression_of_type}};
+use crate::new_utils::{
+    get_encoding_length_expression_of_type, get_packing_function_of_type,
+    get_type_params_from_generics, has_engine_generic_param,
+};
 
-pub(crate) fn derive_pack(input: proc_macro::TokenStream) -> proc_macro::TokenStream{
+pub(crate) fn derive_pack(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let derived_input = parse_macro_input!(input as DeriveInput);
 
-    let DeriveInput{
-        
+    let DeriveInput {
         ident,
         generics,
         data,
@@ -19,7 +24,8 @@ pub(crate) fn derive_pack(input: proc_macro::TokenStream) -> proc_macro::TokenSt
 
     let type_params = get_type_params_from_generics(&generics, &Comma(Span::call_site()), false);
 
-    let enconding_length_constant_ident = syn::parse_str::<Ident>(&format!("{}CircuitEncodingLength", ident)).unwrap();
+    let enconding_length_constant_ident =
+        syn::parse_str::<Ident>(&format!("{}CircuitEncodingLength", ident)).unwrap();
     let mut encoding_length_expression = TokenStream::new();
     let mut packing = TokenStream::new();
     match data {
@@ -29,13 +35,14 @@ pub(crate) fn derive_pack(input: proc_macro::TokenStream) -> proc_macro::TokenSt
                     let field_ident = field.ident.clone().expect("a field ident");
 
                     let (field_enconding_length, field_packing) = match field.ty {
-                        Type::Array(ref array_ty) =>  {
+                        Type::Array(ref array_ty) => {
                             match *array_ty.elem {
-                                Type::Path(ref _p) => {},
+                                Type::Path(ref _p) => {}
                                 _ => abort_call_site!("only array of elements is allowed here"),
                             };
 
-                            let array_enconding_length = get_encoding_length_expression_of_type(&field.ty);
+                            let array_enconding_length =
+                                get_encoding_length_expression_of_type(&field.ty);
                             let (push_fn, pack_fn) = get_packing_function_of_type(&field.ty);
                             let field_packing = quote! {
                                 for elem in &self.#field_ident {
@@ -43,20 +50,21 @@ pub(crate) fn derive_pack(input: proc_macro::TokenStream) -> proc_macro::TokenSt
                                 }
                             };
                             (array_enconding_length, field_packing)
-                        },
+                        }
                         Type::Path(ref _ty_path) => {
-                            let enconding_length = get_encoding_length_expression_of_type(&field.ty);
+                            let enconding_length =
+                                get_encoding_length_expression_of_type(&field.ty);
                             let (push_fn, pack_fn) = get_packing_function_of_type(&field.ty);
                             let field_packing = quote! {
                                 pack#push_fn(self.#field_ident#pack_fn);
                             };
                             (enconding_length, field_packing)
-                        },
+                        }
                         _ => abort_call_site!("only array and path types are allowed"),
                     };
 
                     if !encoding_length_expression.is_empty() {
-                        encoding_length_expression.extend(quote!{+});
+                        encoding_length_expression.extend(quote! {+});
                     }
                     encoding_length_expression.extend(field_enconding_length);
 
@@ -69,9 +77,8 @@ pub(crate) fn derive_pack(input: proc_macro::TokenStream) -> proc_macro::TokenSt
     }
 
     if encoding_length_expression.is_empty() {
-        encoding_length_expression.extend(quote!{0});
+        encoding_length_expression.extend(quote! {0});
     }
-
 
     let comma = Comma(Span::call_site());
 
@@ -94,7 +101,7 @@ pub(crate) fn derive_pack(input: proc_macro::TokenStream) -> proc_macro::TokenSt
         where_clause: None,
     };
 
-    let expanded = quote!{
+    let expanded = quote! {
         #vis const #enconding_length_constant_ident: usize = #encoding_length_expression;
 
         impl#generics #ident<#type_params> {

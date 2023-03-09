@@ -1,12 +1,15 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use proc_macro_error::abort_call_site;
-use quote::{quote};
-use syn::{PathArguments, GenericArgument, GenericParam, Generics, Type, TypePath, punctuated::Punctuated, token::Comma};
+use quote::quote;
+use syn::{
+    punctuated::Punctuated, token::Comma, GenericArgument, GenericParam, Generics, PathArguments,
+    Type, TypePath,
+};
 
-pub(crate) fn is_primitive(path_ty: &TypePath) -> bool{
-    for p in ["u8", "u16", "u32", "u64", "u128"].iter(){
-        if *path_ty == syn::parse_str::<TypePath>(p).unwrap(){
-            return true
+pub(crate) fn is_primitive(path_ty: &TypePath) -> bool {
+    for p in ["u8", "u16", "u32", "u64", "u128"].iter() {
+        if *path_ty == syn::parse_str::<TypePath>(p).unwrap() {
+            return true;
         }
     }
     false
@@ -19,28 +22,43 @@ const EQUIVALENT_BASE_TYPES: [(&str, &str, &str, &str); 13] = [
     ("UInt64<E>", "u64", "allocate", "get_value"),
     ("UInt32<E>", "u32", "allocate", "get_value"),
     ("UInt16<E>", "u16", "allocate", "get_value"),
-    ("UInt8<E>", "u8",  "allocate", "get_value"),
+    ("UInt8<E>", "u8", "allocate", "get_value"),
     ("UInt160<E>", "u160", "allocate", "get_value"),
     ("Byte<E>", "u8", "from_u8_witness", "get_byte_value"),
     ("Boolean", "bool", "alloc", "get_value"),
-    ("SmallFixedWidthInteger<E, U160>", "u160", "alloc_from_address_like", "get_value_address_like"),
-    ("SmallFixedWidthInteger<E, U32>", "u32", "from_u32_witness", "get_value_clamped"),
-    ("SmallFixedWidthInteger<E, W>", "E::Fr", "allocate", "get_value"),
+    (
+        "SmallFixedWidthInteger<E, U160>",
+        "u160",
+        "alloc_from_address_like",
+        "get_value_address_like",
+    ),
+    (
+        "SmallFixedWidthInteger<E, U32>",
+        "u32",
+        "from_u32_witness",
+        "get_value_clamped",
+    ),
+    (
+        "SmallFixedWidthInteger<E, W>",
+        "E::Fr",
+        "allocate",
+        "get_value",
+    ),
 ];
 
-pub(crate) fn is_equivalent_of_base_type(path_ty: &TypePath) -> bool{
-    for (base, _, _, _) in EQUIVALENT_BASE_TYPES.iter(){
-        if *path_ty == syn::parse_str::<TypePath>(base).unwrap(){
-            return true
+pub(crate) fn is_equivalent_of_base_type(path_ty: &TypePath) -> bool {
+    for (base, _, _, _) in EQUIVALENT_BASE_TYPES.iter() {
+        if *path_ty == syn::parse_str::<TypePath>(base).unwrap() {
+            return true;
         }
     }
     false
 }
 
-pub(crate) fn is_base_type(path_ty: &TypePath) -> bool{
-    for (_, base, _, _) in EQUIVALENT_BASE_TYPES.iter(){
-        if *path_ty == syn::parse_str::<TypePath>(base).unwrap(){
-            return true
+pub(crate) fn is_base_type(path_ty: &TypePath) -> bool {
+    for (_, base, _, _) in EQUIVALENT_BASE_TYPES.iter() {
+        if *path_ty == syn::parse_str::<TypePath>(base).unwrap() {
+            return true;
         }
     }
     false
@@ -58,10 +76,9 @@ pub(crate) fn get_equivalent_type(original_ty: &Type) -> Type {
         Type::Path(ty) => {
             if let Some(base_type) = find_in_equivalent_base_types(ty) {
                 Type::Path(base_type)
-            }
-            else{
+            } else {
                 let mut witness_ident_str = String::from("<");
-                witness_ident_str.push_str(&TokenStream::from(quote!{#ty}).to_string());
+                witness_ident_str.push_str(&TokenStream::from(quote! {#ty}).to_string());
                 witness_ident_str.push_str(" as ");
                 let mut witnessed_ty = ty.clone();
                 if let Some(last_seg) = witnessed_ty.path.segments.last_mut() {
@@ -79,15 +96,18 @@ pub(crate) fn get_equivalent_type(original_ty: &Type) -> Type {
                         }
                     }
                     if !engine_param_already_present {
-                        extended_seg_args.insert(0,syn::parse_str("E").unwrap());
+                        extended_seg_args.insert(0, syn::parse_str("E").unwrap());
                     }
 
-                    last_seg.ident = syn::parse_str::<Ident>(&format!("{}CSWitnessed", ident)).unwrap();
-                    last_seg.arguments = PathArguments::AngleBracketed(syn::parse_str(&quote!{::<#extended_seg_args>}.to_string()).unwrap());
+                    last_seg.ident =
+                        syn::parse_str::<Ident>(&format!("{}CSWitnessed", ident)).unwrap();
+                    last_seg.arguments = PathArguments::AngleBracketed(
+                        syn::parse_str(&quote! {::<#extended_seg_args>}.to_string()).unwrap(),
+                    );
                 } else {
                     abort_call_site!("type path should contains a type")
                 };
-                witness_ident_str.push_str(&TokenStream::from(quote!{#witnessed_ty}).to_string());
+                witness_ident_str.push_str(&TokenStream::from(quote! {#witnessed_ty}).to_string());
                 witness_ident_str.push_str(">::Witness");
                 Type::Path(syn::parse_str::<TypePath>(&witness_ident_str).unwrap())
             }
@@ -99,7 +119,7 @@ pub(crate) fn get_equivalent_type(original_ty: &Type) -> Type {
 fn find_in_equivalent_base_types(ty: &TypePath) -> Option<TypePath> {
     EQUIVALENT_BASE_TYPES
         .iter()
-        .map(|(a, b, _, _ )| {
+        .map(|(a, b, _, _)| {
             let first_ty: TypePath = syn::parse_str(a).unwrap();
             let second_ty: TypePath = syn::parse_str(b).unwrap();
 
@@ -134,19 +154,22 @@ pub(crate) fn get_type_path_of_field(ty: &Type) -> TypePath {
 pub(crate) fn get_base_type_allocation_fn_name_by_ident(ty: &TypePath) -> Option<Ident> {
     EQUIVALENT_BASE_TYPES
         .iter()
-        .find(|(original_ident, _, _, _)| syn::parse_str::<TypePath>(original_ident).unwrap() == *ty)
+        .find(|(original_ident, _, _, _)| {
+            syn::parse_str::<TypePath>(original_ident).unwrap() == *ty
+        })
         .map(|(_, _, fn_str, _)| syn::parse_str(fn_str).unwrap())
-//    .expect(&format!("should find a matching 'allocation' fn name for {:?}", ty))
+    //    .expect(&format!("should find a matching 'allocation' fn name for {:?}", ty))
 }
 
 pub(crate) fn get_base_type_witness_fn_name_by_ident(ty: &TypePath) -> Option<Ident> {
     EQUIVALENT_BASE_TYPES
         .iter()
-        .find(|(original_ident, _, _, _)| syn::parse_str::<TypePath>(original_ident).unwrap() == *ty )
+        .find(|(original_ident, _, _, _)| {
+            syn::parse_str::<TypePath>(original_ident).unwrap() == *ty
+        })
         .map(|(_, _, _, fn_str)| syn::parse_str(fn_str).unwrap())
-//    .expect(&format!("should find a matching 'get value' fn name for {:?}", ty))
+    //    .expect(&format!("should find a matching 'get value' fn name for {:?}", ty))
 }
-
 
 pub(crate) fn has_engine_generic_param<P>(
     generic_params: &Punctuated<GenericParam, P>,
@@ -163,7 +186,7 @@ pub(crate) fn has_engine_generic_param<P>(
 pub(crate) fn get_type_params_from_generics<P: Clone + Default>(
     generics: &Generics,
     punc: &P,
-    skip_engine: bool
+    skip_engine: bool,
 ) -> Punctuated<Ident, P> {
     let type_params = generics.type_params();
     let const_params = generics.const_params();
@@ -171,7 +194,7 @@ pub(crate) fn get_type_params_from_generics<P: Clone + Default>(
     let mut idents = Punctuated::new();
 
     for param in type_params.into_iter() {
-        if skip_engine && *param == syn::parse_str("E: Engine").unwrap(){
+        if skip_engine && *param == syn::parse_str("E: Engine").unwrap() {
             continue;
         }
         let ident = param.ident.clone();
@@ -191,7 +214,7 @@ pub(crate) fn get_type_params_from_generics<P: Clone + Default>(
 pub(crate) fn get_type_params_from_generics_output_params<P: Clone + Default>(
     generics: &Generics,
     punc: &P,
-    skip_engine: bool
+    skip_engine: bool,
 ) -> Punctuated<GenericParam, P> {
     let type_params = generics.type_params();
     let const_params = generics.const_params();
@@ -199,7 +222,7 @@ pub(crate) fn get_type_params_from_generics_output_params<P: Clone + Default>(
     let mut idents = Punctuated::new();
 
     for param in type_params.into_iter() {
-        if skip_engine && *param == syn::parse_str("E: Engine").unwrap(){
+        if skip_engine && *param == syn::parse_str("E: Engine").unwrap() {
             continue;
         }
         idents.push(GenericParam::Type(param.clone()));
@@ -214,9 +237,7 @@ pub(crate) fn get_type_params_from_generics_output_params<P: Clone + Default>(
     idents
 }
 
-pub(crate) fn virually_monomorphize_type(
-    ty: &TypePath,
-) -> TypePath {
+pub(crate) fn virually_monomorphize_type(ty: &TypePath) -> TypePath {
     let substitution_ty = syn::parse_str::<Type>("crate::pairing::bn256::Bn256").unwrap();
     let mut new_ty = ty.clone();
     for (idx, segment) in new_ty.path.segments.iter_mut().enumerate() {
@@ -249,26 +270,24 @@ pub(crate) fn virually_monomorphize_type(
                             if change {
                                 *t = substitution_ty.clone();
                             }
-                        },
+                        }
                         _ => {
                             abort_call_site!("can not virtually monomorphize for type parameters other than Engine, that should be first");
                         }
                     }
                 }
-            },
+            }
             PathArguments::Parenthesized(..) => {
                 abort_call_site!("can not virtually monomorphize for complex generics");
             }
-            PathArguments::None => {},
+            PathArguments::None => {}
         }
     }
-    
+
     new_ty
 }
 
-pub(crate) fn virually_monomorphize(
-    generics: &Generics,
-) -> Ident {
+pub(crate) fn virually_monomorphize(generics: &Generics) -> Ident {
     let type_params = generics.type_params();
     let const_params = generics.const_params();
 
@@ -279,7 +298,9 @@ pub(crate) fn virually_monomorphize(
             let ident = syn::parse_str("crate::pairing::bn256::Bn256").unwrap();
             formed_ident = Some(ident);
         } else {
-            abort_call_site!("can not virtually monomorphize for type parameters other than Engine");
+            abort_call_site!(
+                "can not virtually monomorphize for type parameters other than Engine"
+            );
         }
     }
 
@@ -290,7 +311,7 @@ pub(crate) fn virually_monomorphize(
     formed_ident.unwrap()
 }
 
-pub(crate) fn get_witness_ident(original_ident: &Ident) -> Ident{
+pub(crate) fn get_witness_ident(original_ident: &Ident) -> Ident {
     let mut witness_ident_str = original_ident.to_string();
     witness_ident_str.push_str(&"Witness");
     syn::parse_str(&witness_ident_str).unwrap()
@@ -304,16 +325,12 @@ pub(crate) fn fetch_attr(name: &str, attrs: &[syn::Attribute]) -> Option<String>
                 syn::Meta::NameValue(nv) => {
                     if nv.path.is_ident(name) {
                         match nv.lit {
-                            syn::Lit::Str(ref s) =>{
-                                return Some(s.value())
-                            },
-                            _ => {}
-                            // _ => panic!("attribute {} not found", name)
+                            syn::Lit::Str(ref s) => return Some(s.value()),
+                            _ => {} // _ => panic!("attribute {} not found", name)
                         }
                     }
                 }
-                _ => {}
-                // _ => panic!("attribute {} not found", name)
+                _ => {} // _ => panic!("attribute {} not found", name)
             }
         }
     }
@@ -325,18 +342,18 @@ pub(crate) fn fetch_attr(name: &str, attrs: &[syn::Attribute]) -> Option<String>
 // in its definition. e.g when original struct only has Boolean in its fields.
 // we prepend here because we don't want to add E into type params while E should be in impl part
 // e.g impl<E: Engine, const L: usize> Trait for Sturct<L>
-pub(crate) fn prepend_engine_param_if_not_exist(generics: &mut Generics){
+pub(crate) fn prepend_engine_param_if_not_exist(generics: &mut Generics) {
     let mut new_generic_params = Punctuated::new();
 
     let engine_generic_param = syn::parse_str::<GenericParam>(&"E: Engine").unwrap();
-    if has_engine_generic_param(&generics.params, &engine_generic_param) == false{
+    if has_engine_generic_param(&generics.params, &engine_generic_param) == false {
         new_generic_params.push(engine_generic_param.clone());
         new_generic_params.push_punct(Comma(Span::call_site()));
     }
 
     new_generic_params.extend(generics.params.clone());
 
-    *generics = Generics{
+    *generics = Generics {
         lt_token: Some(syn::token::Lt(Span::call_site())),
         params: new_generic_params,
         gt_token: Some(syn::token::Gt(Span::call_site())),
@@ -345,20 +362,19 @@ pub(crate) fn prepend_engine_param_if_not_exist(generics: &mut Generics){
 }
 
 pub(crate) fn get_empty_path_field_initialization_of_type(ty: &TypePath) -> TokenStream {
-    if ty == &syn::parse_str(&"bool").unwrap(){
+    if ty == &syn::parse_str(&"bool").unwrap() {
         quote! {
             false
         }
-    }else if is_primitive(ty){
+    } else if is_primitive(ty) {
         quote! {
             0
         }
-    }else if is_base_type(ty){
+    } else if is_base_type(ty) {
         quote! {
             #ty::zero()
         }
-    }
-    else{
+    } else {
         quote! {
             #ty::empty()
         }
@@ -370,28 +386,27 @@ pub(crate) fn get_empty_field_initialization_of_type(ty: &Type) -> TokenStream {
         syn::Type::Array(ref ty_arr) => {
             let len = &ty_arr.len;
             let field_init = get_empty_field_initialization_of_type(&ty_arr.elem);
-            quote!{
+            quote! {
                 vec![#field_init; #len].try_into().unwrap()
             }
-        },
+        }
         syn::Type::Path(ref y_path) => {
             let field_init = get_empty_path_field_initialization_of_type(y_path);
-            quote!{
+            quote! {
                 #field_init
             }
-        },
+        }
         _ => abort_call_site!("only array and path types are allowed"),
     }
 }
 
 pub(crate) fn get_empty_path_field_allocation_of_type(ty: &TypePath) -> TokenStream {
     let field_ident = get_ident_of_field_type(&Type::Path(ty.clone()));
-    if is_equivalent_of_base_type(ty){
+    if is_equivalent_of_base_type(ty) {
         quote! {
             #field_ident::zero()
         }
-    }
-    else{
+    } else {
         quote! {
             #field_ident::empty()
         }
@@ -403,33 +418,32 @@ pub(crate) fn get_empty_field_allocation_of_type(ty: &Type) -> TokenStream {
         syn::Type::Array(ref ty_arr) => {
             let len = &ty_arr.len;
             let field_empty = get_empty_field_allocation_of_type(&ty_arr.elem);
-            quote!{
+            quote! {
                 [#field_empty; #len]
             }
-        },
+        }
         syn::Type::Path(ref y_path) => {
             let field_empty = get_empty_path_field_allocation_of_type(y_path);
-            quote!{
+            quote! {
                 #field_empty
             }
-        },
+        }
         _ => abort_call_site!("only array and path types are allowed"),
     }
 }
 
 pub(crate) fn get_path_field_encoding_length_expression_of_type(ty: &TypePath) -> TokenStream {
-    if is_equivalent_of_base_type(ty){
+    if is_equivalent_of_base_type(ty) {
         let field_ident = get_ident_of_field_type(&Type::Path(ty.clone()));
         if field_ident == syn::parse_str::<Ident>("UInt256").unwrap() {
             quote! {4}
-        }
-        else{
+        } else {
             quote! {1}
         }
-    }
-    else{
+    } else {
         let field_ident = get_ident_of_field_type(&Type::Path(ty.clone()));
-        let extended_ident = syn::parse_str::<Ident>(&format!("{}CircuitEncodingLength", field_ident)).unwrap();
+        let extended_ident =
+            syn::parse_str::<Ident>(&format!("{}CircuitEncodingLength", field_ident)).unwrap();
         quote! {
             #extended_ident
         }
@@ -441,25 +455,25 @@ pub(crate) fn get_encoding_length_expression_of_type(ty: &Type) -> TokenStream {
         syn::Type::Array(ref ty_arr) => {
             let len = &ty_arr.len;
             let field_encoding_length = get_encoding_length_expression_of_type(&ty_arr.elem);
-            quote!{
+            quote! {
                 #field_encoding_length * (#len)
             }
-        },
+        }
         syn::Type::Path(ref y_path) => {
             let field_encoding_length = get_path_field_encoding_length_expression_of_type(y_path);
-            quote!{
+            quote! {
                 #field_encoding_length
             }
-        },
+        }
         _ => abort_call_site!("only array and path types are allowed"),
     }
 }
 
 pub(crate) fn get_path_field_packing_function_of_type(ty: &TypePath) -> (TokenStream, TokenStream) {
-    let push_fn = TokenStream::from(quote!{.push});
-    let extend_fn = TokenStream::from(quote!{.extend});
+    let push_fn = TokenStream::from(quote! {.push});
+    let extend_fn = TokenStream::from(quote! {.extend});
 
-    if is_equivalent_of_base_type(ty){
+    if is_equivalent_of_base_type(ty) {
         let field_ident = get_ident_of_field_type(&Type::Path(ty.clone()));
         if field_ident == syn::parse_str::<Ident>("SmallFixedWidthInteger").unwrap() {
             (push_fn, quote! {.value})
@@ -472,8 +486,7 @@ pub(crate) fn get_path_field_packing_function_of_type(ty: &TypePath) -> (TokenSt
         } else {
             (push_fn, quote! {.inner})
         }
-    }
-    else{
+    } else {
         (extend_fn, quote! {.pack(cs)?})
     }
 }
@@ -485,4 +498,3 @@ pub(crate) fn get_packing_function_of_type(ty: &Type) -> (TokenStream, TokenStre
         _ => abort_call_site!("only array or path types are allowed"),
     }
 }
-
