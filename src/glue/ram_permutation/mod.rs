@@ -58,6 +58,7 @@ pub fn ram_permutation_entry_point<
     let mut structured_input =
         RamPermutationCycleInputOutput::alloc_ignoring_outputs(cs, closed_form_input.clone())?;
 
+    // dbg!(&structured_input.hidden_fsm_input.num_nondeterministic_writes);
     // dbg!(structured_input.fsm_input.current_unsorted_queue_state.clone().create_witness());
 
     let unsorted_queue_from_fsm_input = MemoryQueriesQueue::from_raw_parts(
@@ -220,6 +221,15 @@ pub fn ram_permutation_entry_point<
         &structured_input.hidden_fsm_input.rhs_accumulator,
     )?;
 
+    let num_nondeterministic_writes = UInt32::conditionally_select(
+        cs, 
+        &structured_input.start_flag, 
+        &UInt32::zero(), 
+        &structured_input
+            .hidden_fsm_input
+            .num_nondeterministic_writes
+    )?;
+
     // walk over queues, accumulate grand products, and ensure sorting
 
     let (
@@ -238,9 +248,7 @@ pub fn ram_permutation_entry_point<
         structured_input.hidden_fsm_input.previous_full_key,
         structured_input.hidden_fsm_input.previous_values_pair,
         structured_input.hidden_fsm_input.previous_is_ptr,
-        structured_input
-            .hidden_fsm_input
-            .num_nondeterministic_writes,
+        num_nondeterministic_writes,
         // structured_input.observable_input.unsorted_queue_initial_state.length,
         round_function,
         limit,

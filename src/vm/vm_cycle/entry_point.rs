@@ -254,9 +254,9 @@ pub fn initial_state_for_bootloading<
 
     // bootloader should not pay for resizes
     ctx.saved_context.common_part.heap_upper_bound =
-        UInt32::from_uint(zk_evm::abstractions::MAX_MEMORY_BYTES as u32);
+        UInt32::from_uint(zkevm_opcode_defs::system_params::BOOTLOADER_MAX_MEMORY);
     ctx.saved_context.common_part.aux_heap_upper_bound =
-        UInt32::from_uint(zk_evm::abstractions::MAX_MEMORY_BYTES as u32);
+        UInt32::from_uint(zkevm_opcode_defs::system_params::BOOTLOADER_MAX_MEMORY);
 
     // now push that to the callstack, manually
 

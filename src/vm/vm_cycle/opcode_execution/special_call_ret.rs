@@ -525,7 +525,6 @@ impl<E: Engine> FatPtrInABI<E> {
         let length = input.u32x8_view.unwrap()[3];
 
         let offset_is_zero = offset.is_zero(cs)?;
-        let length_is_zero = length.is_zero(cs)?;
         let mut invalid = smart_and(cs, &[offset_is_zero.not(), as_fresh])?;
 
         let (end_non_inclusive, out_of_bounds) =
@@ -534,11 +533,9 @@ impl<E: Engine> FatPtrInABI<E> {
         // check that we do not have overflows in addressable range
         let is_in_bounds = out_of_bounds.not();
 
-        // offset < length
-        let (_, uf) = offset.sub_using_delayed_bool_allocation(cs, &length, optimizer)?;
-        // or it's empty pointer with 0 length and 0 offset
-        let is_trivial = smart_and(cs, &[offset_is_zero, length_is_zero])?;
-        let is_addresable = smart_or(cs, &[uf, is_trivial])?;
+        // offset <= length
+        let (_, uf) = length.sub_using_delayed_bool_allocation(cs, &offset, optimizer)?;
+        let is_addresable = uf.not();
 
         invalid = smart_or(
             cs,
@@ -836,6 +833,9 @@ fn callstack_candidate_for_far_call<
 
     // we need a completely fresh one
     let mut new_callstack_entry = ExecutionContextRecord::uninitialized();
+    // apply memory stipends right away
+    new_callstack_entry.common_part.heap_upper_bound = UInt32::from_uint(zkevm_opcode_defs::system_params::NEW_FRAME_MEMORY_STIPEND);
+    new_callstack_entry.common_part.aux_heap_upper_bound = UInt32::from_uint(zkevm_opcode_defs::system_params::NEW_FRAME_MEMORY_STIPEND);
 
     // now also create target for mimic
     let implicit_mimic_call_reg = current_state.registers
@@ -912,6 +912,11 @@ fn callstack_candidate_for_far_call<
     let destination_shard =
         UInt8::conditionally_select(cs, &is_call_shard, &destination_shard, &caller_shard_id)?;
     let target_is_zkporter = destination_shard.is_zero(cs)?.not();
+
+    if crate::VERBOSE_CIRCUITS && execute.get_value().unwrap_or(false) {
+        println!("Calling shard {}", destination_shard.get_value().unwrap());
+        println!("Calling address {}", destination_address.get_value().unwrap());
+    }
 
     let target_is_kernel = {
         let mut lc = LinearCombination::zero();
@@ -1044,6 +1049,7 @@ fn callstack_candidate_for_far_call<
         ],
     )?;
 
+    // NOTE: if bytecode hash is trivial then it's 0, so version byte is not valid!
     let code_format_exception = smart_or(cs, &[versioned_byte_is_valid.not(), unknown_marker])?;
 
     // we do not remask right away yet
@@ -1060,11 +1066,6 @@ fn callstack_candidate_for_far_call<
 
     // we also tentatively recompose bytecode hash in it's "storage" format
 
-    let mut lc = LinearCombination::zero();
-    lc.add_assign_number_with_coeff(&bytecode_hash_upper_decomposition[4].inner, shifts[0]);
-    lc.add_assign_number_with_coeff(&bytecode_hash_upper_decomposition[5].inner, shifts[8]);
-    let mut code_hash_length_in_words = UInt16::from_num_unchecked(lc.into_num(cs)?);
-
     // we always mask marker byte for our decommittment requests
     let marker_byte_masked = UInt8::zero();
 
@@ -1073,7 +1074,8 @@ fn callstack_candidate_for_far_call<
     lc.add_assign_number_with_coeff(&bytecode_hash_upper_decomposition[1].inner, shifts[8]);
     lc.add_assign_number_with_coeff(&bytecode_hash_upper_decomposition[2].inner, shifts[16]);
     lc.add_assign_number_with_coeff(&bytecode_hash_upper_decomposition[3].inner, shifts[24]);
-    lc.add_assign_number_with_coeff(&code_hash_length_in_words.inner, shifts[32]);
+    lc.add_assign_number_with_coeff(&bytecode_hash_upper_decomposition[4].inner, shifts[32]);
+    lc.add_assign_number_with_coeff(&bytecode_hash_upper_decomposition[5].inner, shifts[40]);
     lc.add_assign_number_with_coeff(&marker_byte_masked.inner, shifts[48]);
     lc.add_assign_number_with_coeff(&version_byte.inner, shifts[56]);
     let bytecode_at_rest_top_word = UInt64::from_num_unchecked(lc.into_num(cs)?);
@@ -1101,6 +1103,19 @@ fn callstack_candidate_for_far_call<
         &masked_value_if_mask,
     )?;
 
+    // we also need masked bytecode length
+    let masked_bytecode_hash_upper_decomposition =
+        masked_bytecode_hash.inner[3].decompose_into_uint8_in_place(cs)?;
+    let mut lc = LinearCombination::zero();
+    lc.add_assign_number_with_coeff(&masked_bytecode_hash_upper_decomposition[4].inner, shifts[0]);
+    lc.add_assign_number_with_coeff(&masked_bytecode_hash_upper_decomposition[5].inner, shifts[8]);
+    let mut code_hash_length_in_words = UInt16::from_num_unchecked(lc.into_num(cs)?);
+
+    // if we call now-in-construction system contract, then we formally mask into 0 (even though it's not needed),
+    // and we should put an exception here
+
+    let call_now_in_construction_kernel = smart_and(cs, &[can_call_code.not(), target_is_kernel])?;
+
     drop(bytecode_hash);
 
     // at the end of the day all our exceptions will lead to memory page being 0
@@ -1109,8 +1124,11 @@ fn callstack_candidate_for_far_call<
 
     // exceptions, along with `bytecode_hash_is_trivial` indicate whether we will or will decommit code
     // into memory, or will just use UNMAPPED_PAGE
+
+    // NOTE: if bytecode hash is trivial, then our bytecode will not pass those checks
     let mut exceptions = Vec::with_capacity(8);
     exceptions.push(code_format_exception);
+    exceptions.push(call_now_in_construction_kernel);
 
     // resolve passed ergs, passed calldata page, etc
 
@@ -1131,8 +1149,10 @@ fn callstack_candidate_for_far_call<
 
     let fat_ptr = fat_ptr.mask_into_empty(cs, exceptions_collapsed)?;
     // also mask upped bound since we do not recompute
-
     let upper_bound = pointer_validation_data.upper_bound;
+    // first mask to 0 if exceptions happened
+    let upper_bound = upper_bound.mask(cs, &exceptions_collapsed.not())?;
+    // then compute to penalize for out of memory access attemp
     let penalize_for_out_of_bounds = pointer_validation_data.memory_is_not_addressable;
     let upper_bound = UInt32::conditionally_select(
         cs,
@@ -1141,8 +1161,7 @@ fn callstack_candidate_for_far_call<
         &upper_bound,
     )?;
 
-    // now we can modify fat ptr that is prevalidated
-
+    // now we can modify fat ptr that was prevalidated
     let fat_ptr_adjusted_if_forward = fat_ptr.readjust(cs, optimizer)?;
 
     let page = UInt32::conditionally_select(
@@ -1221,6 +1240,31 @@ fn callstack_candidate_for_far_call<
         &current_callstack_entry.common_part.aux_heap_upper_bound,
     )?;
 
+    // now any extra cost
+    let callee_stipend = if zk_evm::opcodes::execution::far_call::FORCED_ERGS_FOR_MSG_VALUE_SIMULATOR == false {
+        UInt32::zero()
+    } else {
+        use crate::vm::primitives::u160;
+        let target_is_msg_value = UInt160::equals(cs, &destination_address, &UInt160::from_uint(u160::from_u64(zkevm_opcode_defs::ADDRESS_MSG_VALUE as u64)))?;
+        let is_system_abi = far_call_abi.system_call;
+        let require_extra = smart_and(cs, &[target_is_msg_value, is_system_abi])?;
+
+        let additive_cost = UInt32::from_uint(zkevm_opcode_defs::system_params::MSG_VALUE_SIMULATOR_ADDITIVE_COST);
+        let pubdata_cost = UInt32::from_uint(zkevm_opcode_defs::system_params::MSG_VALUE_SIMULATOR_PUBDATA_BYTES_TO_PREPAY).inner.mul(
+            cs, &current_state.ergs_per_pubdata_byte.inner
+        )?;
+        let pubdata_cost = UInt32 {inner: pubdata_cost};
+        let cost = pubdata_cost.add_unchecked(cs, &additive_cost)?;
+
+        cost.mask(cs, &require_extra)?
+    };
+
+    let (ergs_left_after_extra_costs, uf) = ergs_left_after_growth
+        .sub_using_delayed_bool_allocation(cs, &callee_stipend, optimizer)?;
+    let ergs_left_after_extra_costs = ergs_left_after_extra_costs.mask(cs, &uf.not())?; // if not enough - set to 0
+    let callee_stipend = callee_stipend.mask(cs, &uf.not())?; // also set to 0 if we were not able to take it
+    exceptions.push(uf);
+
     // now we can indeed decommit
     let exception = smart_or(cs, &exceptions)?;
     let should_decommit = smart_and(cs, &[execute, exception.not()])?;
@@ -1241,7 +1285,7 @@ fn callstack_candidate_for_far_call<
     ) = add_to_decommittment_queue(
         cs,
         should_decommit,
-        ergs_left_after_growth,
+        ergs_left_after_extra_costs,
         masked_bytecode_hash,
         code_hash_length_in_words,
         current_state.code_decommittment_queue_state,
@@ -1297,6 +1341,8 @@ fn callstack_candidate_for_far_call<
 
     let remaining_ergs_if_pass = remaining_for_this_context;
     let passed_ergs_if_pass = ergs_to_pass;
+    let passed_ergs_if_pass = callee_stipend.inner.add(cs, &passed_ergs_if_pass.inner)?;
+    let passed_ergs_if_pass = UInt32 { inner: passed_ergs_if_pass };
 
     if crate::VERBOSE_CIRCUITS && execute.get_value().unwrap_or(false) {
         println!(
@@ -1560,9 +1606,16 @@ pub fn may_be_read_code_hash<
 
     // - if we couldn't read porter
     bytecode_hash =
-        UInt256::conditionally_select(cs, &needs_porter_mask, &UInt256::zero(), &bytecode_hash)?;
+        UInt256::conditionally_select(
+            cs,
+            &needs_porter_mask, 
+            &UInt256::zero(), 
+            &bytecode_hash
+        )?;
 
+    // bytecode is exactly 0 if we did NOT mask it into defualt AA
     let t0 = smart_and(cs, &[bytecode_is_empty, mask_for_default_aa.not()])?;
+    // or if we never read, if it's unavailable porter, or if we never masked 0 into default AA
     let bytecode_hash_is_trivial = smart_or(cs, &[t0, needs_porter_mask, should_read.not()])?;
 
     // now process the sponges on whether we did read
@@ -1697,7 +1750,12 @@ pub fn add_to_decommittment_queue<
         println!("WIll refund ergs for decommit");
     }
     let ergs_remaining_after_decommit =
-        UInt32::conditionally_select(cs, &refund, &ergs_remaining, &ergs_remaining_after_decommit)?;
+        UInt32::conditionally_select(
+            cs, 
+            &refund, 
+            &ergs_remaining, 
+            &ergs_remaining_after_decommit
+        )?;
 
     let mut all_sponge_requests = vec![];
 
@@ -1997,8 +2055,9 @@ fn callstack_candidate_for_ret<E: Engine, CS: ConstraintSystem<E>>(
     )?;
 
     // potentially pay for memory growth
-
     let upper_bound = pointer_validation_data.upper_bound;
+    // mask into 0 if we are executing "panic" due to exceptions
+    let upper_bound = upper_bound.mask(cs, &exceptions_collapsed.not())?;
     let penalize_for_out_of_bounds = pointer_validation_data.memory_is_not_addressable;
     let upper_bound = UInt32::conditionally_select(
         cs,

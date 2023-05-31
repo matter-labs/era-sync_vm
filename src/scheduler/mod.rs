@@ -156,6 +156,7 @@ pub struct SchedulerCircuitInstanceWitness<E: Engine> {
 
     pub bootloader_heap_memory_state: SpongeLikeQueueStateWitness<E, 3>,
     pub ram_sorted_queue_state: SpongeLikeQueueStateWitness<E, 3>,
+    pub decommits_sorter_intermediate_queue_state: SpongeLikeQueueStateWitness<E, 3>,
 
     // all multi-circuits responsible for sorting
     pub rollup_storage_sorter_intermediate_queue_state:
@@ -598,9 +599,18 @@ pub fn scheduler_function<
         round_function,
     )?;
 
+    let decommits_sorter_intermediate_queue_state = project_ref!(witness, decommits_sorter_intermediate_queue_state).cloned();
+    let decommits_sorter_intermediate_queue_state =
+        SpongeLikeQueueState::alloc_from_witness(cs, decommits_sorter_intermediate_queue_state)?;
+    let mut decommits_sorter_circuit_sorted_queue_state = FullSpongeLikeQueueState::empty();
+    decommits_sorter_circuit_sorted_queue_state.tail = decommits_sorter_intermediate_queue_state.sponge_state;
+    decommits_sorter_circuit_sorted_queue_state.length = decommits_sorter_intermediate_queue_state.length;
+
+
     let decommittments_sorter_circuit_input = CodeDecommittmentsDeduplicatorInputData::<E> {
         initial_log_queue_state: vm_end_of_execution_observable_output
             .decommitment_queue_final_state,
+        sorted_queue_initial_state: decommits_sorter_circuit_sorted_queue_state,
     };
     let decommittments_sorter_circuit_input_commitment =
         commit_encodable_item(cs, &decommittments_sorter_circuit_input, round_function)?;
@@ -974,6 +984,10 @@ pub fn scheduler_function<
 
     let mut minus_one = E::Fr::one();
     minus_one.negate();
+
+    if let Some(inputs) = &full_inputs_witnesses {
+        assert!(limit as usize >= inputs.len(), "The scheduler inputs limit is too small");
+    }
 
     for _idx in 0..limit {
         let closed_form_input_wit = if exec_flag.get_value().unwrap_or(false) {
