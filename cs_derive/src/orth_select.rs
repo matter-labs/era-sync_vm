@@ -87,6 +87,7 @@ pub(crate) fn derive_orthogonal_select(input: proc_macro::TokenStream) -> proc_m
     };
 
     let expanded = quote! {
+        // TODO: generics may not have Engine,
         impl#generics CircuitOrthogonalSelectable<E> for #ident<#type_params_of_allocated_struct>{
             fn select_update_assuming_orthogonality#function_generics(cs: &mut CS, reference: Self, candidates: &[(Boolean, Self)]) -> Result<Self, SynthesisError> {
                 // #array_selections

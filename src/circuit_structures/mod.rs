@@ -260,6 +260,7 @@ impl<E: Engine, W: WidthMarker> SmallFixedWidthInteger<E, W> {
         self.value.clone()
     }
 
+    // TODO: does it contain a vulnerability?
     pub fn speculative_add<CS: ConstraintSystem<E>>(
         &self,
         cs: &mut CS,

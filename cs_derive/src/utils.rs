@@ -58,7 +58,7 @@ pub(crate) fn get_equivalent_type(original_ty: &Type) -> (Type, Option<GenericPa
             let (new_ty, new_type_param) = get_equivalent_type(&ty.elem);
             original_array_ty.elem = Box::from(new_ty);
 
-            (Type::Array(original_array_ty), new_type_param)
+            (Type::Array(original_array_ty), new_type_param) // TODO
         }
         Type::Path(ty) => {
             let (new_ty, type_param) = find_in_equivalent_types(ty);

@@ -89,7 +89,7 @@ pub(crate) fn derive_witness_struct(derived_input: DeriveInput) -> DeriveInput {
     let witness_ident = get_witness_ident(&ident);
 
     DeriveInput {
-        attrs: Vec::new(),
+        attrs: Vec::new(), // TODO: do we need to inherit original attributes or empty attrs is fine?
         vis: vis,
         ident: witness_ident,
         generics: new_generics,

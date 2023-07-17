@@ -119,6 +119,8 @@ impl<E: Engine, I: CircuitFixedLengthEncodableExt<E, N>, const N: usize, const S
 // state = hash(state, item)
 // but as state = absorb(state, item)
 
+// TODO: check later on the replacement mode of the sponge
+
 #[derive(Derivative)]
 #[derivative(Clone, Debug)]
 pub struct FixedWidthEncodingSpongeLikeQueue<

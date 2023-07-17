@@ -43,7 +43,7 @@ fn derive_from_path(ident: &Ident, ty: &TypePath) -> (TokenStream, TokenStream) 
         let mut #ident = #elem_ident::zero();
     };
     let alloc = quote! {
-        let mut #ident = #elem_ident::#fn_ident(cs, witness.as_ref().map(|w| w.#ident.clone()))?;
+        let mut #ident = #elem_ident::#fn_ident(cs, witness.as_ref().map(|w| w.#ident.clone()))?;  // TODO w.#ident.clone() need for BigUint
     };
 
     (empty, alloc)

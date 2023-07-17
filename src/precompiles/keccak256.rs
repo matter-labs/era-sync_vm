@@ -116,14 +116,14 @@ fn transmute_state(reference_state: sha3::Keccak256) -> Keccak256InnerState {
 
 pub struct KeccakSelfVerifier {
     internal_state: sha3::Keccak256,
-    buffer: zk_evm::precompiles::keccak256::Buffer,
+    buffer: zk_evm::zk_evm_abstractions::precompiles::keccak256::Buffer,
 }
 
 impl KeccakSelfVerifier {
     pub fn new() -> Self {
         Self {
             internal_state: sha3::Keccak256::new(),
-            buffer: zk_evm::precompiles::keccak256::Buffer::new(),
+            buffer: zk_evm::zk_evm_abstractions::precompiles::keccak256::Buffer::new(),
         }
     }
     pub fn reset(&mut self) {
@@ -168,7 +168,7 @@ impl KeccakSelfVerifier {
         }
         self.internal_state.update(&tmp);
         let internal_state_raw =
-            zk_evm::precompiles::keccak256::transmute_state(self.internal_state.clone());
+            zk_evm::zk_evm_abstractions::precompiles::keccak256::transmute_state(self.internal_state.clone());
 
         internal_state_raw
     }

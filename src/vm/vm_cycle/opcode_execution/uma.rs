@@ -64,8 +64,6 @@ impl<E: Engine> QuasiFatPtrInUMA<E> {
 
         let (incremented_offset, incremented_offset_of) =
             offset.add_using_delayed_bool_allocation(cs, &UInt32::from_uint(32), optimizer)?;
-        // let ignore_reg_updates_due_to_invalid_increment =
-        //     smart_and(cs, &[incremented_offset_of, should_increment])?;
 
         let ignore_reg_updates_due_to_invalid_increment = incremented_offset_of;
         let should_set_panic = smart_or(
@@ -815,6 +813,8 @@ pub(crate) fn apply<
             sponge_requests_for_write.push(record);
         }
     }
+
+    // TODO: we can make aligned writes to be 1 cycle too
 
     let mut all_sponge_requests = vec![];
     all_sponge_requests.extend(sponge_requests_for_read);

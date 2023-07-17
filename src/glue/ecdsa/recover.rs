@@ -213,6 +213,7 @@ impl<'a, E: Engine, G: GenericCurveAffine, const N: usize> ECRecoverContext<'a, 
         Ok(valid)
     }
 
+    // TODO: we mix generics here a little, move to another implementation block
     pub fn verify_for_ethereum_address<CS: ConstraintSystem<E>>(
         &mut self,
         cs: &mut CS,

@@ -502,6 +502,7 @@ impl<E: Engine> CircuitOrthogonalSelectable<E> for Boolean {
         };
         for (flags, value) in it {
             let flag = smart_or(cs, &flags)?;
+            // TODO: implement accumulation for booleans
             new = Boolean::conditionally_select(cs, &flag, &value, &new)?;
         }
 

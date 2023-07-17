@@ -66,6 +66,7 @@ pub(crate) fn derive_ord(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         get_type_params_from_generics(&generics, &comma, has_engine_param == false);
 
     let expanded = quote! {
+        // TODO: check generics has Engine param
         impl#generics CircuitOrd<E> for #ident<#type_params_of_allocated_struct>{
             fn cmp(&self, other: &Self) -> ::std::cmp::Ordering {
                 // #array_equality_check

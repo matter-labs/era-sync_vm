@@ -28,6 +28,7 @@ pub fn can_not_be_false_if_flagged<E: Engine, CS: ConstraintSystem<E>>(
         _ => {}
     }
 
+    // TODO: we can trivially optimize here
     let invalid = Boolean::and(cs, &condition.not(), &condition_must_be_valid)?;
     Boolean::enforce_equal(cs, &invalid, &Boolean::constant(false))?;
 

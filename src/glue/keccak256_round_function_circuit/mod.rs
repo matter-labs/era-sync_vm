@@ -2,7 +2,6 @@ use super::*;
 use crate::precompiles::keccak256::*;
 use crate::precompiles::*;
 use cs_derive::*;
-use zk_evm::precompiles::keccak256::BUFFER_SIZE;
 
 pub mod input;
 

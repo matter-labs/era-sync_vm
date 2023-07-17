@@ -103,6 +103,7 @@ pub(crate) fn derive_select(input: proc_macro::TokenStream) -> proc_macro::Token
     };
 
     let expanded = quote! {
+        // TODO: generics may not have Engine,
         impl#generics CircuitSelectable<E> for #ident<#type_params_of_allocated_struct>{
             fn conditionally_select#function_generics(cs: &mut CS, flag: &Boolean, a: &Self, b: &Self) -> Result<Self, SynthesisError> {
                 if CircuitEq::eq(a, b) {

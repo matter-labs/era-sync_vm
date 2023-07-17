@@ -351,6 +351,8 @@ impl StorageWitnessHelper {
 //     let address_as_u256 = address_to_u256(cs, &deployer)?;
 //     let shifts = compute_shifts::<E::Fr>();
 
+//     // TODO: cleanup into high and low
+
 //     let mut lc = LinearCombination::zero();
 //     lc.add_assign_number_with_coeff(&address_as_u256.inner[0].inner, shifts[0]);
 //     lc.add_assign_number_with_coeff(&address_as_u256.inner[1].inner, shifts[64]);

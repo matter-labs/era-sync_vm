@@ -81,6 +81,7 @@ pub(crate) fn derive_eq(input: proc_macro::TokenStream) -> proc_macro::TokenStre
         get_type_params_from_generics(&generics, &comma, has_engine_param == false);
 
     let expanded = quote! {
+        // TODO: check generics has Engine param
         impl#generics CircuitEq<E> for #ident<#type_params_of_allocated_struct>{
             fn eq(&self, other: &Self) -> bool {
                 #array_equality_check
