@@ -834,8 +834,10 @@ fn callstack_candidate_for_far_call<
     // we need a completely fresh one
     let mut new_callstack_entry = ExecutionContextRecord::uninitialized();
     // apply memory stipends right away
-    new_callstack_entry.common_part.heap_upper_bound = UInt32::from_uint(zkevm_opcode_defs::system_params::NEW_FRAME_MEMORY_STIPEND);
-    new_callstack_entry.common_part.aux_heap_upper_bound = UInt32::from_uint(zkevm_opcode_defs::system_params::NEW_FRAME_MEMORY_STIPEND);
+    new_callstack_entry.common_part.heap_upper_bound =
+        UInt32::from_uint(zkevm_opcode_defs::system_params::NEW_FRAME_MEMORY_STIPEND);
+    new_callstack_entry.common_part.aux_heap_upper_bound =
+        UInt32::from_uint(zkevm_opcode_defs::system_params::NEW_FRAME_MEMORY_STIPEND);
 
     // now also create target for mimic
     let implicit_mimic_call_reg = current_state.registers
@@ -915,7 +917,10 @@ fn callstack_candidate_for_far_call<
 
     if crate::VERBOSE_CIRCUITS && execute.get_value().unwrap_or(false) {
         println!("Calling shard {}", destination_shard.get_value().unwrap());
-        println!("Calling address {}", destination_address.get_value().unwrap());
+        println!(
+            "Calling address {}",
+            destination_address.get_value().unwrap()
+        );
     }
 
     let target_is_kernel = {
@@ -1107,8 +1112,14 @@ fn callstack_candidate_for_far_call<
     let masked_bytecode_hash_upper_decomposition =
         masked_bytecode_hash.inner[3].decompose_into_uint8_in_place(cs)?;
     let mut lc = LinearCombination::zero();
-    lc.add_assign_number_with_coeff(&masked_bytecode_hash_upper_decomposition[4].inner, shifts[0]);
-    lc.add_assign_number_with_coeff(&masked_bytecode_hash_upper_decomposition[5].inner, shifts[8]);
+    lc.add_assign_number_with_coeff(
+        &masked_bytecode_hash_upper_decomposition[4].inner,
+        shifts[0],
+    );
+    lc.add_assign_number_with_coeff(
+        &masked_bytecode_hash_upper_decomposition[5].inner,
+        shifts[8],
+    );
     let mut code_hash_length_in_words = UInt16::from_num_unchecked(lc.into_num(cs)?);
 
     // if we call now-in-construction system contract, then we formally mask into 0 (even though it's not needed),
@@ -1241,26 +1252,37 @@ fn callstack_candidate_for_far_call<
     )?;
 
     // now any extra cost
-    let callee_stipend = if zk_evm::opcodes::execution::far_call::FORCED_ERGS_FOR_MSG_VALUE_SIMULATOR == false {
-        UInt32::zero()
-    } else {
-        use crate::vm::primitives::u160;
-        let target_is_msg_value = UInt160::equals(cs, &destination_address, &UInt160::from_uint(u160::from_u64(zkevm_opcode_defs::ADDRESS_MSG_VALUE as u64)))?;
-        let is_system_abi = far_call_abi.system_call;
-        let require_extra = smart_and(cs, &[target_is_msg_value, is_system_abi])?;
+    let callee_stipend =
+        if zk_evm::opcodes::execution::far_call::FORCED_ERGS_FOR_MSG_VALUE_SIMULATOR == false {
+            UInt32::zero()
+        } else {
+            use crate::vm::primitives::u160;
+            let target_is_msg_value = UInt160::equals(
+                cs,
+                &destination_address,
+                &UInt160::from_uint(u160::from_u64(zkevm_opcode_defs::ADDRESS_MSG_VALUE as u64)),
+            )?;
+            let is_system_abi = far_call_abi.system_call;
+            let require_extra = smart_and(cs, &[target_is_msg_value, is_system_abi])?;
 
-        let additive_cost = UInt32::from_uint(zkevm_opcode_defs::system_params::MSG_VALUE_SIMULATOR_ADDITIVE_COST);
-        let pubdata_cost = UInt32::from_uint(zkevm_opcode_defs::system_params::MSG_VALUE_SIMULATOR_PUBDATA_BYTES_TO_PREPAY).inner.mul(
-            cs, &current_state.ergs_per_pubdata_byte.inner
-        )?;
-        let pubdata_cost = UInt32 {inner: pubdata_cost};
-        let cost = pubdata_cost.add_unchecked(cs, &additive_cost)?;
+            let additive_cost = UInt32::from_uint(
+                zkevm_opcode_defs::system_params::MSG_VALUE_SIMULATOR_ADDITIVE_COST,
+            );
+            let pubdata_cost = UInt32::from_uint(
+                zkevm_opcode_defs::system_params::MSG_VALUE_SIMULATOR_PUBDATA_BYTES_TO_PREPAY,
+            )
+            .inner
+            .mul(cs, &current_state.ergs_per_pubdata_byte.inner)?;
+            let pubdata_cost = UInt32 {
+                inner: pubdata_cost,
+            };
+            let cost = pubdata_cost.add_unchecked(cs, &additive_cost)?;
 
-        cost.mask(cs, &require_extra)?
-    };
+            cost.mask(cs, &require_extra)?
+        };
 
-    let (ergs_left_after_extra_costs, uf) = ergs_left_after_growth
-        .sub_using_delayed_bool_allocation(cs, &callee_stipend, optimizer)?;
+    let (ergs_left_after_extra_costs, uf) =
+        ergs_left_after_growth.sub_using_delayed_bool_allocation(cs, &callee_stipend, optimizer)?;
     let ergs_left_after_extra_costs = ergs_left_after_extra_costs.mask(cs, &uf.not())?; // if not enough - set to 0
     let callee_stipend = callee_stipend.mask(cs, &uf.not())?; // also set to 0 if we were not able to take it
     exceptions.push(uf);
@@ -1342,7 +1364,9 @@ fn callstack_candidate_for_far_call<
     let remaining_ergs_if_pass = remaining_for_this_context;
     let passed_ergs_if_pass = ergs_to_pass;
     let passed_ergs_if_pass = callee_stipend.inner.add(cs, &passed_ergs_if_pass.inner)?;
-    let passed_ergs_if_pass = UInt32 { inner: passed_ergs_if_pass };
+    let passed_ergs_if_pass = UInt32 {
+        inner: passed_ergs_if_pass,
+    };
 
     if crate::VERBOSE_CIRCUITS && execute.get_value().unwrap_or(false) {
         println!(
@@ -1606,12 +1630,7 @@ pub fn may_be_read_code_hash<
 
     // - if we couldn't read porter
     bytecode_hash =
-        UInt256::conditionally_select(
-            cs,
-            &needs_porter_mask, 
-            &UInt256::zero(), 
-            &bytecode_hash
-        )?;
+        UInt256::conditionally_select(cs, &needs_porter_mask, &UInt256::zero(), &bytecode_hash)?;
 
     // bytecode is exactly 0 if we did NOT mask it into defualt AA
     let t0 = smart_and(cs, &[bytecode_is_empty, mask_for_default_aa.not()])?;
@@ -1750,12 +1769,7 @@ pub fn add_to_decommittment_queue<
         println!("WIll refund ergs for decommit");
     }
     let ergs_remaining_after_decommit =
-        UInt32::conditionally_select(
-            cs, 
-            &refund, 
-            &ergs_remaining, 
-            &ergs_remaining_after_decommit
-        )?;
+        UInt32::conditionally_select(cs, &refund, &ergs_remaining, &ergs_remaining_after_decommit)?;
 
     let mut all_sponge_requests = vec![];
 
