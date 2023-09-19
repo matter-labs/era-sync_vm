@@ -222,12 +222,12 @@ pub fn ram_permutation_entry_point<
     )?;
 
     let num_nondeterministic_writes = UInt32::conditionally_select(
-        cs, 
-        &structured_input.start_flag, 
-        &UInt32::zero(), 
+        cs,
+        &structured_input.start_flag,
+        &UInt32::zero(),
         &structured_input
             .hidden_fsm_input
-            .num_nondeterministic_writes
+            .num_nondeterministic_writes,
     )?;
 
     // walk over queues, accumulate grand products, and ensure sorting

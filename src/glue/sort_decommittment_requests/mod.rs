@@ -46,9 +46,8 @@ pub fn sort_and_deduplicate_code_decommittments_entry_point<
     ];
 
     let [initial_log_queue_state_from_fsm, sorted_queue_state_from_fsm, final_queue_state_from_fsm] =
-        queue_states_from_fsm.map(|el| {
-            DecommitQueue::from_raw_parts(cs, el.head, el.tail, el.length)
-        });
+        queue_states_from_fsm
+            .map(|el| DecommitQueue::from_raw_parts(cs, el.head, el.tail, el.length));
 
     let initial_queue_from_passthrough = DecommitQueue::from_raw_parts(
         cs,
@@ -147,20 +146,25 @@ pub fn sort_and_deduplicate_code_decommittments_entry_point<
 
         taken += 1;
     }
-    assert_eq!(fs_challenges.len(), DecommitHash::<E>::CIRCUIT_ENCODING_LEN + 1);
+    assert_eq!(
+        fs_challenges.len(),
+        DecommitHash::<E>::CIRCUIT_ENCODING_LEN + 1
+    );
 
     let additive_part = fs_challenges.pop().unwrap();
 
     let mut grand_products = <[Num<E>; 2]>::conditionally_select(
         cs,
         &structured_input.start_flag,
-        &[Num::one(); 2], 
+        &[Num::one(); 2],
         &structured_input.hidden_fsm_input.grand_products,
     )?;
 
     let mut previous_packed_key = structured_input.hidden_fsm_input.previous_packed_key;
     let mut previous_item_is_trivial = structured_input.hidden_fsm_input.previous_item_is_trivial;
-    let mut first_encountered_timestamp = structured_input.hidden_fsm_input.first_encountered_timestamp;
+    let mut first_encountered_timestamp = structured_input
+        .hidden_fsm_input
+        .first_encountered_timestamp;
     let previous_record_encoding = structured_input.hidden_fsm_input.previous_record_encoding;
     let mut previous_record = DecommitQuery::allocate_and_prove_encoding(
         cs,
@@ -195,15 +199,18 @@ pub fn sort_and_deduplicate_code_decommittments_entry_point<
     structured_input.hidden_fsm_output.grand_products = grand_products;
     structured_input.hidden_fsm_output.previous_packed_key = previous_packed_key;
     structured_input.hidden_fsm_output.previous_item_is_trivial = previous_item_is_trivial;
-    structured_input.hidden_fsm_output.first_encountered_timestamp = first_encountered_timestamp;
+    structured_input
+        .hidden_fsm_output
+        .first_encountered_timestamp = first_encountered_timestamp;
     structured_input.hidden_fsm_output.previous_record_encoding = previous_record.encode(cs)?;
 
-    structured_input.observable_output.final_queue_state = FullSpongeLikeQueueState::conditionally_select(
-        cs,
-        &completed,
-        &structured_input.hidden_fsm_output.final_queue_state,
-        &structured_input.observable_output.final_queue_state
-    )?;
+    structured_input.observable_output.final_queue_state =
+        FullSpongeLikeQueueState::conditionally_select(
+            cs,
+            &completed,
+            &structured_input.hidden_fsm_output.final_queue_state,
+            &structured_input.observable_output.final_queue_state,
+        )?;
 
     structured_input.completion_flag = completed;
 
@@ -297,8 +304,10 @@ pub fn sort_and_deduplicate_code_decommittments_inner<
         let lhs_candidate = grand_products[0].mul(cs, &lhs_contribution)?;
         let rhs_candidate = grand_products[1].mul(cs, &rhs_contribution)?;
 
-        grand_products[0] = Num::conditionally_select(cs, &should_pop, &lhs_candidate, &grand_products[0])?;
-        grand_products[1] = Num::conditionally_select(cs, &should_pop, &rhs_candidate, &grand_products[1])?;
+        grand_products[0] =
+            Num::conditionally_select(cs, &should_pop, &lhs_candidate, &grand_products[0])?;
+        grand_products[1] =
+            Num::conditionally_select(cs, &should_pop, &rhs_candidate, &grand_products[1])?;
     }
 
     // if this circuit is the last one the queues must be empty and grand products must be equal
@@ -355,7 +364,10 @@ pub fn sort_and_deduplicate_code_decommittments_inner<
 
         // otherwise it should have the same memory page
         let enforce_same_memory_page = if first_iter {
-            smart_and(cs, &[same_hash, previous_item_is_trivial.not(), start_flag.not()])?
+            smart_and(
+                cs,
+                &[same_hash, previous_item_is_trivial.not(), start_flag.not()],
+            )?
         } else {
             smart_and(cs, &[same_hash, previous_item_is_trivial.not()])?
         };
@@ -368,7 +380,14 @@ pub fn sort_and_deduplicate_code_decommittments_inner<
 
         // decide if we should add the PREVIOUS into the queue
         let add_to_the_queue = if first_iter {
-            smart_and(cs, &[previous_item_is_trivial.not(), same_hash.not(), start_flag.not()])?
+            smart_and(
+                cs,
+                &[
+                    previous_item_is_trivial.not(),
+                    same_hash.not(),
+                    start_flag.not(),
+                ],
+            )?
         } else {
             smart_and(cs, &[previous_item_is_trivial.not(), same_hash.not()])?
         };
@@ -391,7 +410,7 @@ pub fn sort_and_deduplicate_code_decommittments_inner<
 
         first_iter = false;
     }
-    
+
     // finalization step - push the last one if necessary
     {
         let add_to_the_queue = Boolean::and(cs, &previous_item_is_trivial.not(), &completed)?;
