@@ -168,7 +168,9 @@ impl KeccakSelfVerifier {
         }
         self.internal_state.update(&tmp);
         let internal_state_raw =
-            zk_evm::zk_evm_abstractions::precompiles::keccak256::transmute_state(self.internal_state.clone());
+            zk_evm::zk_evm_abstractions::precompiles::keccak256::transmute_state(
+                self.internal_state.clone(),
+            );
 
         internal_state_raw
     }
