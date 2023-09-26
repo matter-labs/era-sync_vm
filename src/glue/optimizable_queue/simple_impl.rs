@@ -1,5 +1,4 @@
 use super::super::traits::*;
-use super::utils::*;
 use super::*;
 use crate::bellman::SynthesisError;
 use crate::circuit_structures::traits::*;

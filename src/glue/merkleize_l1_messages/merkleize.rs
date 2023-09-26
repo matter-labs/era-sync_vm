@@ -606,8 +606,6 @@ pub(crate) fn byte_encodable_queue_binary_hash<
         chunk.copy_from_slice(&encoding);
     }
 
-    drop(encoding_area);
-
     let binary_hash = binary_hasher.hash(cs, &bytes)?;
 
     Ok(binary_hash)

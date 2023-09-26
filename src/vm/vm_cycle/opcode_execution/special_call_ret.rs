@@ -1127,8 +1127,6 @@ fn callstack_candidate_for_far_call<
 
     let call_now_in_construction_kernel = smart_and(cs, &[can_call_code.not(), target_is_kernel])?;
 
-    drop(bytecode_hash);
-
     // at the end of the day all our exceptions will lead to memory page being 0
 
     code_hash_length_in_words = code_hash_length_in_words.mask(cs, &code_format_exception.not())?;

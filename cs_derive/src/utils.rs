@@ -77,7 +77,7 @@ fn find_in_equivalent_types(ty: &TypePath) -> (TypePath, Option<GenericParam>) {
             let second_ty: TypePath = syn::parse_str(b).unwrap();
             let type_param = if let Some(ref ty_param) = c {
                 Some(GenericParam::Type(
-                    syn::parse_str::<TypeParam>(ty_param.clone()).unwrap(),
+                    syn::parse_str::<TypeParam>(ty_param).unwrap(),
                 ))
             } else {
                 None
