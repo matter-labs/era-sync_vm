@@ -46,7 +46,6 @@ impl<
                     layer_elements.push(node_hash);
                 }
                 assert!(layer_elements.len().is_power_of_two());
-                drop(src);
                 node_layers.push(layer_elements);
             }
             assert_eq!(node_layers.last().unwrap().len(), 1);

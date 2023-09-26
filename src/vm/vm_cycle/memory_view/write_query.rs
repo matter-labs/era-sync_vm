@@ -73,6 +73,7 @@ impl<E: Engine> MemoryWriteQuery<E> {
         lc.add_assign_number_with_coeff(&u64_word_2.inner, shifts[0]);
         lc.add_assign_number_with_coeff(&u64_word_3.inner, shifts[64]);
         lc.add_assign_number_with_coeff(&highest_128.inner, minus_one);
+        lc.enforce_zero(cs)?;
 
         let MemoryKey {
             timestamp,

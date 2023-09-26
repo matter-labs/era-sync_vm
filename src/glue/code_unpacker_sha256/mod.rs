@@ -250,7 +250,7 @@ use crate::glue::optimizable_queue::{
 };
 use crate::glue::traits::get_vec_vec_witness_raw_with_hint_on_more_in_subset;
 use crate::glue::traits::CircuitFixedLengthEncodableExt;
-use crate::scheduler::queues::memory_access::*;
+// use crate::scheduler::queues::memory_access::*;
 use crate::scheduler::queues::*;
 use crate::vm::optimizer::sponge_set::SpongeOptimizer;
 use crate::vm::primitives::UInt64;

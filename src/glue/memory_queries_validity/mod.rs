@@ -5,7 +5,6 @@ use crate::glue::optimizable_queue::{
 };
 use crate::glue::traits::get_vec_witness_raw_with_hint;
 use crate::glue::traits::CircuitFixedLengthEncodableExt;
-use crate::scheduler::queues::memory_access::*;
 use crate::scheduler::queues::*;
 use crate::vm::optimizer::sponge_set::SpongeOptimizer;
 use crate::vm::primitives::UInt64;
