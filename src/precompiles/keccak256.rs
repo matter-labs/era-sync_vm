@@ -106,28 +106,20 @@ struct Keccak256VarCore {
     state: Keccak256InnerState,
 }
 
-fn transmute_state(reference_state: sha3::Keccak256) -> Keccak256InnerState {
-    // we use a trick that size of both structures is the same, and even though we do not know a stable field layout,
-    // we can replicate it
-    let our_wrapper: CoreWrapper = unsafe { std::mem::transmute(reference_state) };
-
-    our_wrapper.core.state
-}
-
 pub struct KeccakSelfVerifier {
-    internal_state: sha3::Keccak256,
+    internal_state: zk_evm::zk_evm_abstractions::precompiles::keccak256::Keccak256,
     buffer: zk_evm::zk_evm_abstractions::precompiles::keccak256::Buffer,
 }
 
 impl KeccakSelfVerifier {
     pub fn new() -> Self {
         Self {
-            internal_state: sha3::Keccak256::new(),
+            internal_state: zk_evm::zk_evm_abstractions::precompiles::keccak256::Keccak256::new(),
             buffer: zk_evm::zk_evm_abstractions::precompiles::keccak256::Buffer::new(),
         }
     }
     pub fn reset(&mut self) {
-        self.internal_state = sha3::Keccak256::new();
+        self.internal_state = zk_evm::zk_evm_abstractions::precompiles::keccak256::Keccak256::new();
         self.buffer.reset();
     }
     pub fn add_to_buffer<E: Engine>(
