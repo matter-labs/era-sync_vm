@@ -10,7 +10,7 @@ resolver = "2"
 # franklin-crypto = {path = "../franklin-crypto", features = ["plonk", "multicore"]}
 franklin-crypto = {git = "https://github.com/matter-labs/franklin-crypto", branch = "dev", features = ["multicore"]}
 sha2 = "0.10"
-sha3 = "0.10"
+sha3 = "0.10.6"
 hex = "*"
 once_cell = "*"
 derivative = "*"
