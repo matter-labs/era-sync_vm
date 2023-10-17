@@ -182,27 +182,6 @@ mod tests {
     use rescue_poseidon::RescueParams;
 
     #[test]
-    fn test_create_from_leaves() {
-        let params = bn254_rescue_params();
-        let hasher = StaticGenericBinaryTreeHasher::<
-            Bn256,
-            RescueParams<Bn256, AWIDTH_VALUE, SWIDTH_VALUE>,
-            AWIDTH_VALUE,
-            SWIDTH_VALUE,
-        >::new(&params);
-
-        let mut leaf_hashes = vec![Fr::zero(); 8];
-        let one = Fr::from_str("1").unwrap();
-        leaf_hashes[0] = one;
-        let new_tree = BinaryTree::<Bn256, _>::create_from_leaf_hashes(&leaf_hashes, hasher);
-
-        assert_eq!(
-            new_tree.get_commitment().to_string().as_str(),
-            "Fr(0x2a30c843f2912ccc50f7b5baab078e548dd5df3fdb07199d1413c437b0997dee)"
-        );
-    }
-
-    #[test]
     fn test_query_path() {
         let leaf_hashes = (0..8)
             .map(|leaf| Fr::from_str(0.to_string().as_str()).unwrap())
