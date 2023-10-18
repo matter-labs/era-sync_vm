@@ -653,9 +653,9 @@ mod test {
         let length_in_words = (input_length / 32) as u16;
         let length_in_words_le = length_in_words.to_be_bytes();
 
-        use zkevm_opcode_defs::VersionedHashDef;
         use zkevm_opcode_defs::versioned_hash::ContractCodeSha256;
-        
+        use zkevm_opcode_defs::VersionedHashDef;
+
         code_hash_in_internal_format[0] = ContractCodeSha256::VERSION_BYTE;
         code_hash_in_internal_format[1] = 0;
         code_hash_in_internal_format[2] = length_in_words_le[0];
