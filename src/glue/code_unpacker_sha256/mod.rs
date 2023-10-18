@@ -652,9 +652,15 @@ mod test {
         let mut code_hash_in_internal_format = [0u8; 32];
         let length_in_words = (input_length / 32) as u16;
         let length_in_words_le = length_in_words.to_be_bytes();
-        code_hash_in_internal_format[0] = length_in_words_le[0];
-        code_hash_in_internal_format[1] = length_in_words_le[1];
-        code_hash_in_internal_format[2..].copy_from_slice(&code_hash.as_slice()[2..]);
+
+        use zkevm_opcode_defs::VersionedHashDef;
+        use zkevm_opcode_defs::versioned_hash::ContractCodeSha256;
+        
+        code_hash_in_internal_format[0] = ContractCodeSha256::VERSION_BYTE;
+        code_hash_in_internal_format[1] = 0;
+        code_hash_in_internal_format[2] = length_in_words_le[0];
+        code_hash_in_internal_format[3] = length_in_words_le[1];
+        code_hash_in_internal_format[4..].copy_from_slice(&code_hash.as_slice()[4..]);
         let code_hash =
             UInt256::constant_from_biguint(BigUint::from_bytes_be(&code_hash_in_internal_format));
 

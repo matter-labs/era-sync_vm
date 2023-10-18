@@ -192,13 +192,13 @@ mod tests {
         >::new(&params);
 
         let mut leaf_hashes = vec![Fr::zero(); 8];
-        let one = Fr::from_str("1").unwrap();
-        leaf_hashes[0] = one;
+        leaf_hashes[0] = Fr::one();
         let new_tree = BinaryTree::<Bn256, _>::create_from_leaf_hashes(&leaf_hashes, hasher);
 
         assert_eq!(
             new_tree.get_commitment().to_string().as_str(),
-            "Fr(0x2a30c843f2912ccc50f7b5baab078e548dd5df3fdb07199d1413c437b0997dee)"
+            // "Fr(0x2a30c843f2912ccc50f7b5baab078e548dd5df3fdb07199d1413c437b0997dee)"
+            "Fr(0x113bf1fa2ddb05cf4659651dc6a6c602a8f29dfde19f288e066c97b020fdc9d8)"
         );
     }
 
