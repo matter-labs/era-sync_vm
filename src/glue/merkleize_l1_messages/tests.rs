@@ -20,8 +20,8 @@ use crate::testing::{create_test_artifacts, deterministic_rng};
 use crate::utils::log2_floor;
 use crate::vm::optimizer::sponge_set::SpongeOptimizer;
 use crate::vm::primitives::small_uints::*;
+use crate::zkevm_opcode_defs::sha2::{Digest, Sha256};
 use rand::Rng;
-use sha2::{Digest, Sha256};
 use std::convert::TryInto;
 
 pub trait TreeHasher {

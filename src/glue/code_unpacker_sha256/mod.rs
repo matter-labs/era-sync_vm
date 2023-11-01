@@ -642,7 +642,7 @@ mod test {
             words.push(word);
         }
 
-        use sha2::{Digest, Sha256};
+        use crate::zkevm_opcode_defs::sha2::{Digest, Sha256};
 
         let mut code_hash = Sha256::new();
         code_hash.update(&input_bytes);

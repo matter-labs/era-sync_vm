@@ -893,7 +893,7 @@ mod test {
             words.push(word);
         }
 
-        use sha3::{Digest, Keccak256};
+        use crate::zkevm_opcode_defs::sha3::{Digest, Keccak256};
 
         let mut code_hash = Keccak256::new();
         code_hash.update(&input_bytes);
@@ -1023,7 +1023,7 @@ mod test {
             words.push(word);
         }
 
-        use sha3::{Digest, Keccak256};
+        use crate::zkevm_opcode_defs::sha3::{Digest, Keccak256};
 
         let mut code_hash = Keccak256::new();
         code_hash.update(&input_bytes);
