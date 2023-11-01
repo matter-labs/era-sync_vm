@@ -51,12 +51,15 @@ pub(crate) fn apply<
 ) -> Result<OpcodePartialApplicationResult<E, PropsMarker>, SynthesisError> {
     let n = cs.get_current_aux_gate_number();
 
-    let and_opcode =
-        zkevm_opcode_defs::Opcode::Binop(zkevm_opcode_defs::definitions::binop::BinopOpcode::And);
-    let or_opcode =
-        zkevm_opcode_defs::Opcode::Binop(zkevm_opcode_defs::definitions::binop::BinopOpcode::Or);
-    let xor_opcode =
-        zkevm_opcode_defs::Opcode::Binop(zkevm_opcode_defs::definitions::binop::BinopOpcode::Xor);
+    let and_opcode = crate::zkevm_opcode_defs::Opcode::Binop(
+        crate::zkevm_opcode_defs::definitions::binop::BinopOpcode::And,
+    );
+    let or_opcode = crate::zkevm_opcode_defs::Opcode::Binop(
+        crate::zkevm_opcode_defs::definitions::binop::BinopOpcode::Or,
+    );
+    let xor_opcode = crate::zkevm_opcode_defs::Opcode::Binop(
+        crate::zkevm_opcode_defs::definitions::binop::BinopOpcode::Xor,
+    );
 
     let should_apply = common_opcode_state
         .decoded_opcode
@@ -213,6 +216,32 @@ pub(crate) fn apply<
             LinearCombination::zero(),
         ],
     ];
+
+    // it's purely unused witness
+    let zero_var = AllocatedNum::alloc(cs, || Ok(E::Fr::zero()))?;
+
+    // the only thing left is to range-check "and" chunks, and we do it by two per row
+    for chunk in output_limbs.chunks_exact(2) {
+        let [and_0, _or_0, _xor_0] = chunk[0];
+        let [and_1, _or_1, _xor_1] = chunk[1];
+        let unused_val = match (and_0.get_value(), and_1.get_value()) {
+            (Some(or), Some(xor)) => {
+                let out_val = table.query(&[or, xor])?;
+
+                Some(out_val[0])
+            }
+            _ => None,
+        };
+        let unused_lookup_result = AllocatedNum::alloc(cs, || Ok(unused_val.grab()?))?;
+        let vars = [
+            and_0.get_variable().get_variable(),
+            and_1.get_variable().get_variable(),
+            unused_lookup_result.get_variable(),
+            zero_var.get_variable(),
+        ];
+        let sels = [E::Fr::zero(); 5];
+        apply_table(cs, table.clone(), &vars[..], &sels[..])?;
+    }
 
     // take chunks of 16 bytes and form linear combinations
     for (dst, src_set) in out_candidates.iter_mut().zip(output_limbs.chunks(16)) {

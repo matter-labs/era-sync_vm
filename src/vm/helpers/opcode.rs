@@ -1,6 +1,6 @@
 use super::*;
 
-use zkevm_opcode_defs::{
+use crate::zkevm_opcode_defs::{
     CONDITIONAL_BITS_SHIFT, OPCODES_TABLE_WIDTH, VARIANT_AND_CONDITION_ENCODING_BITS,
 };
 
@@ -13,7 +13,7 @@ pub const OPCODE_PROPS_BITMASK_FOR_BITSPREAD_ENCODING: u64 =
 use crate::precompiles::utils::table_width_3_lookup;
 use crate::vm::ports::ArithmeticFlagsPort;
 
-use zkevm_opcode_defs::{
+use crate::zkevm_opcode_defs::{
     OPCODE_INPUT_VARIANT_FLAGS, OPCODE_OUTPUT_VARIANT_FLAGS, OPCODE_TYPE_BITS, TOTAL_AUX_BITS,
 };
 

@@ -5,10 +5,10 @@ use crate::vm::vm_cycle::opcode_bitmask::SUPPORTED_ISA_VERSION;
 use crate::vm::vm_cycle::pre_state::*;
 use crate::vm::vm_cycle::witness_oracle::WitnessOracle;
 use crate::vm::vm_state::*;
-use zkevm_opcode_defs::Opcode;
+use crate::zkevm_opcode_defs::Opcode;
 
-use zkevm_opcode_defs::system_params::NUM_SPONGES;
-use zkevm_opcode_defs::MAX_PENDING_CYCLES;
+use crate::zkevm_opcode_defs::system_params::NUM_SPONGES;
+use crate::zkevm_opcode_defs::MAX_PENDING_CYCLES;
 
 pub fn merge_into_next_state<
     E: Engine,
@@ -163,7 +163,7 @@ pub fn merge_into_next_state<
     // perform DST updates for non-specific registers
     let dst0_is_in_register = decoded_opcode
         .properties_bits
-        .boolean_for_dst_mem_access(zkevm_opcode_defs::ImmMemHandlerFlags::UseRegOnly);
+        .boolean_for_dst_mem_access(crate::zkevm_opcode_defs::ImmMemHandlerFlags::UseRegOnly);
     let should_update_dst0_register = smart_and(cs, &[should_update_dst0, dst0_is_in_register])?;
 
     for (idx, marker) in decoded_opcode.dst_regs_selectors[0].iter().enumerate() {

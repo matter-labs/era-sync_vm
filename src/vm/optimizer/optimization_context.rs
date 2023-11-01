@@ -30,7 +30,7 @@ pub struct CtxMarker {
     idx: u8,
 }
 
-use zkevm_opcode_defs::NUM_OPCODES;
+use crate::zkevm_opcode_defs::NUM_OPCODES;
 
 impl CtxMarker {
     pub fn advance(self) -> Self {
@@ -49,25 +49,25 @@ impl CtxMarker {
     }
 }
 
-impl From<zkevm_opcode_defs::Opcode> for CtxMarker {
-    fn from(opcode: zkevm_opcode_defs::Opcode) -> Self {
+impl From<crate::zkevm_opcode_defs::Opcode> for CtxMarker {
+    fn from(opcode: crate::zkevm_opcode_defs::Opcode) -> Self {
         let idx = match opcode {
-            zkevm_opcode_defs::Opcode::Invalid(_) => unimplemented!(),
-            zkevm_opcode_defs::Opcode::Nop(_) => 0,
-            zkevm_opcode_defs::Opcode::Add(_) => 1,
-            zkevm_opcode_defs::Opcode::Sub(_) => 2,
-            zkevm_opcode_defs::Opcode::Mul(_) => 3,
-            zkevm_opcode_defs::Opcode::Div(_) => 4,
-            zkevm_opcode_defs::Opcode::Jump(_) => 5,
-            zkevm_opcode_defs::Opcode::Ptr(_) => 6,
-            zkevm_opcode_defs::Opcode::Context(_) => 7,
-            zkevm_opcode_defs::Opcode::Shift(_) => 8,
-            zkevm_opcode_defs::Opcode::Binop(_) => 9,
-            zkevm_opcode_defs::Opcode::NearCall(_)
-            | zkevm_opcode_defs::Opcode::FarCall(_)
-            | zkevm_opcode_defs::Opcode::Ret(_) => 10,
-            zkevm_opcode_defs::Opcode::Log(_) => 11,
-            zkevm_opcode_defs::Opcode::UMA(_) => 12,
+            crate::zkevm_opcode_defs::Opcode::Invalid(_) => unimplemented!(),
+            crate::zkevm_opcode_defs::Opcode::Nop(_) => 0,
+            crate::zkevm_opcode_defs::Opcode::Add(_) => 1,
+            crate::zkevm_opcode_defs::Opcode::Sub(_) => 2,
+            crate::zkevm_opcode_defs::Opcode::Mul(_) => 3,
+            crate::zkevm_opcode_defs::Opcode::Div(_) => 4,
+            crate::zkevm_opcode_defs::Opcode::Jump(_) => 5,
+            crate::zkevm_opcode_defs::Opcode::Ptr(_) => 6,
+            crate::zkevm_opcode_defs::Opcode::Context(_) => 7,
+            crate::zkevm_opcode_defs::Opcode::Shift(_) => 8,
+            crate::zkevm_opcode_defs::Opcode::Binop(_) => 9,
+            crate::zkevm_opcode_defs::Opcode::NearCall(_)
+            | crate::zkevm_opcode_defs::Opcode::FarCall(_)
+            | crate::zkevm_opcode_defs::Opcode::Ret(_) => 10,
+            crate::zkevm_opcode_defs::Opcode::Log(_) => 11,
+            crate::zkevm_opcode_defs::Opcode::UMA(_) => 12,
         };
 
         CtxMarker { idx }

@@ -4,8 +4,8 @@ use crate::glue::traits::*;
 use crate::vm::primitives::register_view::Register;
 use crate::vm::vm_cycle::initial_decoding::OpcodeFinalDecoding;
 use crate::vm::vm_cycle::witness_oracle::MemoryWitness;
+use crate::zkevm_opcode_defs::ImmMemHandlerFlags;
 use cs_derive::*;
-use zkevm_opcode_defs::ImmMemHandlerFlags;
 
 #[derive(CSAllocatable, CSWitnessable, Clone)]
 pub struct MemoryLocation<E: Engine> {
@@ -61,9 +61,12 @@ pub fn resolve_memory_region_and_index_for_source<E: Engine, CS: ConstraintSyste
     )?;
     let did_read = smart_or(cs, &[use_stack, use_code])?;
     // we have a special rule for NOP opcode: if we NOP then even though we CAN formally address the memory we SHOULD NOT read
-    let is_nop = opcode_props
-        .properties_bits
-        .boolean_for_opcode(zkevm_opcode_defs::Opcode::Nop(zkevm_opcode_defs::NopOpcode));
+    let is_nop =
+        opcode_props
+            .properties_bits
+            .boolean_for_opcode(crate::zkevm_opcode_defs::Opcode::Nop(
+                crate::zkevm_opcode_defs::NopOpcode,
+            ));
     let did_read = smart_and(cs, &[did_read, is_nop.not()])?;
     let page = UInt32::conditionally_select(cs, &use_stack, &stack_page, &code_page)?;
 
@@ -130,9 +133,12 @@ pub fn resolve_memory_region_and_index_for_dest<E: Engine, CS: ConstraintSystem<
         ],
     )?;
     // we have a special rule for NOP opcode: if we NOP then even though we CAN formally address the memory we SHOULD NOT write
-    let is_nop = opcode_props
-        .properties_bits
-        .boolean_for_opcode(zkevm_opcode_defs::Opcode::Nop(zkevm_opcode_defs::NopOpcode));
+    let is_nop =
+        opcode_props
+            .properties_bits
+            .boolean_for_opcode(crate::zkevm_opcode_defs::Opcode::Nop(
+                crate::zkevm_opcode_defs::NopOpcode,
+            ));
     let did_write = smart_and(cs, &[did_write, is_nop.not()])?;
 
     let index_with_somewhat_relative_addressing = UInt16::conditionally_select(

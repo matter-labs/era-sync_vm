@@ -5,7 +5,7 @@ use cs_derive::*;
 
 use crate::project_ref;
 
-use zkevm_opcode_defs::{
+use crate::zkevm_opcode_defs::{
     FarCallForwardPageType, RetForwardPageType, FAR_CALL_CONSTRUCTOR_CALL_BYTE_IDX,
     FAR_CALL_SHARD_ID_BYTE_IDX, FAR_CALL_SYSTEM_CALL_BYTE_IDX, UNMAPPED_PAGE,
 };
@@ -297,9 +297,9 @@ pub(crate) fn apply_specialized_call_ret<
     };
 
     let marker = SpecializedImplementationPropsMarker::CallRet(
-        zkevm_opcode_defs::NearCallOpcode,
-        zkevm_opcode_defs::FarCallOpcode::Normal,
-        zkevm_opcode_defs::RetOpcode::Ok,
+        crate::zkevm_opcode_defs::NearCallOpcode,
+        crate::zkevm_opcode_defs::FarCallOpcode::Normal,
+        crate::zkevm_opcode_defs::RetOpcode::Ok,
     );
 
     let t = smart_and(cs, &[apply_ret, did_return_from_far_call])?;
@@ -672,7 +672,8 @@ fn callstack_candidate_for_near_call<E: Engine, CS: ConstraintSystem<E>>(
     witness_oracle: &mut impl WitnessOracle<E>,
 ) -> Result<NearCallData<E>, SynthesisError> {
     // new callstack should be just the same a the old one, but we also need to update the pricing for pubdata in the rare case
-    let opcode = zkevm_opcode_defs::Opcode::NearCall(zkevm_opcode_defs::NearCallOpcode);
+    let opcode =
+        crate::zkevm_opcode_defs::Opcode::NearCall(crate::zkevm_opcode_defs::NearCallOpcode);
 
     let execute = common_opcode_state
         .decoded_opcode
@@ -790,7 +791,8 @@ fn callstack_candidate_for_far_call<
 ) -> Result<FarCallData<E>, SynthesisError> {
     // new callstack should be just the same a the old one, but we also need to update the pricing for pubdata in the rare case
 
-    let opcode = zkevm_opcode_defs::Opcode::FarCall(zkevm_opcode_defs::FarCallOpcode::Normal);
+    let opcode =
+        crate::zkevm_opcode_defs::Opcode::FarCall(crate::zkevm_opcode_defs::FarCallOpcode::Normal);
 
     let execute = common_opcode_state
         .decoded_opcode
@@ -802,20 +804,20 @@ fn callstack_candidate_for_far_call<
     let is_normal_call = common_opcode_state
         .decoded_opcode
         .properties_bits
-        .boolean_for_variant(zkevm_opcode_defs::Opcode::FarCall(
-            zkevm_opcode_defs::FarCallOpcode::Normal,
+        .boolean_for_variant(crate::zkevm_opcode_defs::Opcode::FarCall(
+            crate::zkevm_opcode_defs::FarCallOpcode::Normal,
         ));
     let is_delegated_call = common_opcode_state
         .decoded_opcode
         .properties_bits
-        .boolean_for_variant(zkevm_opcode_defs::Opcode::FarCall(
-            zkevm_opcode_defs::FarCallOpcode::Delegate,
+        .boolean_for_variant(crate::zkevm_opcode_defs::Opcode::FarCall(
+            crate::zkevm_opcode_defs::FarCallOpcode::Delegate,
         ));
     let is_mimic_call = common_opcode_state
         .decoded_opcode
         .properties_bits
-        .boolean_for_variant(zkevm_opcode_defs::Opcode::FarCall(
-            zkevm_opcode_defs::FarCallOpcode::Mimic,
+        .boolean_for_variant(crate::zkevm_opcode_defs::Opcode::FarCall(
+            crate::zkevm_opcode_defs::FarCallOpcode::Mimic,
         ));
     let is_kernel_mode = current_state
         .callstack
@@ -835,13 +837,13 @@ fn callstack_candidate_for_far_call<
     let mut new_callstack_entry = ExecutionContextRecord::uninitialized();
     // apply memory stipends right away
     new_callstack_entry.common_part.heap_upper_bound =
-        UInt32::from_uint(zkevm_opcode_defs::system_params::NEW_FRAME_MEMORY_STIPEND);
+        UInt32::from_uint(crate::zkevm_opcode_defs::system_params::NEW_FRAME_MEMORY_STIPEND);
     new_callstack_entry.common_part.aux_heap_upper_bound =
-        UInt32::from_uint(zkevm_opcode_defs::system_params::NEW_FRAME_MEMORY_STIPEND);
+        UInt32::from_uint(crate::zkevm_opcode_defs::system_params::NEW_FRAME_MEMORY_STIPEND);
 
     // now also create target for mimic
     let implicit_mimic_call_reg = current_state.registers
-        [zkevm_opcode_defs::definitions::far_call::CALL_IMPLICIT_PARAMETER_REG_IDX as usize]
+        [crate::zkevm_opcode_defs::definitions::far_call::CALL_IMPLICIT_PARAMETER_REG_IDX as usize]
         .clone();
     // here we have to pay the cost of full decomposition
     let highest = implicit_mimic_call_reg.inner[1].decompose_into_uint16_in_place(cs)?;
@@ -868,7 +870,7 @@ fn callstack_candidate_for_far_call<
     let destination_address = common_opcode_state.src1_view.lowest160.unwrap();
     let destination_decomposition = common_opcode_state.src1_view.decomposed_lowest160.unwrap();
 
-    use zkevm_opcode_defs::{FAR_CALL_SHARD_FLAG_IDX, FAR_CALL_STATIC_FLAG_IDX};
+    use crate::zkevm_opcode_defs::{FAR_CALL_SHARD_FLAG_IDX, FAR_CALL_STATIC_FLAG_IDX};
     let is_static_call = common_opcode_state
         .decoded_opcode
         .properties_bits
@@ -962,7 +964,7 @@ fn callstack_candidate_for_far_call<
 
     // increment next counter
 
-    use zkevm_opcode_defs::NEW_MEMORY_PAGES_PER_FAR_CALL;
+    use crate::zkevm_opcode_defs::NEW_MEMORY_PAGES_PER_FAR_CALL;
     let new_base_page = current_state.memory_page_counter;
     let (new_memory_pages_counter, _) = current_state
         .memory_page_counter
@@ -1030,13 +1032,13 @@ fn callstack_candidate_for_far_call<
 
     let bytecode_hash_upper_decomposition =
         bytecode_hash.inner[3].decompose_into_uint8_in_place(cs)?;
-    use zkevm_opcode_defs::versioned_hash::VersionedHashDef;
+    use crate::zkevm_opcode_defs::versioned_hash::VersionedHashDef;
 
     let version_byte = bytecode_hash_upper_decomposition[7];
     let versioned_byte_is_valid = UInt8::equals(
         cs,
         &version_byte,
-        &UInt8::from_uint(zkevm_opcode_defs::ContractCodeSha256::VERSION_BYTE),
+        &UInt8::from_uint(crate::zkevm_opcode_defs::ContractCodeSha256::VERSION_BYTE),
     )?;
 
     let marker_byte = bytecode_hash_upper_decomposition[6];
@@ -1044,7 +1046,7 @@ fn callstack_candidate_for_far_call<
     let is_constructor_call_marker = UInt8::equals(
         cs,
         &marker_byte,
-        &UInt8::from_uint(zkevm_opcode_defs::ContractCodeSha256::YET_CONSTRUCTED_MARKER),
+        &UInt8::from_uint(crate::zkevm_opcode_defs::ContractCodeSha256::YET_CONSTRUCTED_MARKER),
     )?;
     let unknown_marker = smart_and(
         cs,
@@ -1258,19 +1260,19 @@ fn callstack_candidate_for_far_call<
             let target_is_msg_value = UInt160::equals(
                 cs,
                 &destination_address,
-                &UInt160::from_uint(u160::from_u64(zkevm_opcode_defs::ADDRESS_MSG_VALUE as u64)),
+                &UInt160::from_uint(u160::from_u64(
+                    crate::zkevm_opcode_defs::ADDRESS_MSG_VALUE as u64,
+                )),
             )?;
             let is_system_abi = far_call_abi.system_call;
             let require_extra = smart_and(cs, &[target_is_msg_value, is_system_abi])?;
 
             let additive_cost = UInt32::from_uint(
-                zkevm_opcode_defs::system_params::MSG_VALUE_SIMULATOR_ADDITIVE_COST,
+                crate::zkevm_opcode_defs::system_params::MSG_VALUE_SIMULATOR_ADDITIVE_COST,
             );
-            let pubdata_cost = UInt32::from_uint(
-                zkevm_opcode_defs::system_params::MSG_VALUE_SIMULATOR_PUBDATA_BYTES_TO_PREPAY,
-            )
-            .inner
-            .mul(cs, &current_state.ergs_per_pubdata_byte.inner)?;
+            let pubdata_cost = UInt32::from_uint(crate::zkevm_opcode_defs::system_params::MSG_VALUE_SIMULATOR_PUBDATA_BYTES_TO_PREPAY).inner.mul(
+            cs, &current_state.ergs_per_pubdata_byte.inner
+        )?;
             let pubdata_cost = UInt32 {
                 inner: pubdata_cost,
             };
@@ -1479,28 +1481,28 @@ fn callstack_candidate_for_far_call<
     new_r2.inner[0] = UInt128::from_num_unchecked(lc.into_num(cs)?);
 
     let mut register_cleanups = Vec::with_capacity(16);
-    for reg_idx in zkevm_opcode_defs::definitions::far_call::CALL_SYSTEM_ABI_REGISTERS {
+    for reg_idx in crate::zkevm_opcode_defs::definitions::far_call::CALL_SYSTEM_ABI_REGISTERS {
         register_cleanups.push((far_call_abi.system_call.not(), reg_idx as usize));
     }
-    for reg_idx in zkevm_opcode_defs::definitions::far_call::CALL_RESERVED_RANGE {
+    for reg_idx in crate::zkevm_opcode_defs::definitions::far_call::CALL_RESERVED_RANGE {
         register_cleanups.push((Boolean::constant(true), reg_idx as usize));
     }
     register_cleanups.push((
         Boolean::constant(true),
-        zkevm_opcode_defs::definitions::far_call::CALL_IMPLICIT_PARAMETER_REG_IDX as usize,
+        crate::zkevm_opcode_defs::definitions::far_call::CALL_IMPLICIT_PARAMETER_REG_IDX as usize,
     ));
 
     // erase markers everywhere anyway
     let mut erase_ptr_markers = Vec::with_capacity(16);
-    for reg_idx in zkevm_opcode_defs::definitions::far_call::CALL_SYSTEM_ABI_REGISTERS {
+    for reg_idx in crate::zkevm_opcode_defs::definitions::far_call::CALL_SYSTEM_ABI_REGISTERS {
         erase_ptr_markers.push((Boolean::constant(true), reg_idx as usize));
     }
-    for reg_idx in zkevm_opcode_defs::definitions::far_call::CALL_RESERVED_RANGE {
+    for reg_idx in crate::zkevm_opcode_defs::definitions::far_call::CALL_RESERVED_RANGE {
         erase_ptr_markers.push((Boolean::constant(true), reg_idx as usize));
     }
     erase_ptr_markers.push((
         Boolean::constant(true),
-        zkevm_opcode_defs::definitions::far_call::CALL_IMPLICIT_PARAMETER_REG_IDX as usize,
+        crate::zkevm_opcode_defs::definitions::far_call::CALL_IMPLICIT_PARAMETER_REG_IDX as usize,
     ));
 
     assert_eq!(register_cleanups.len(), erase_ptr_markers.len());
@@ -1579,7 +1581,7 @@ pub fn may_be_read_code_hash<
 
     let mut storage_key = StorageLogRecord {
         address: UInt160::from_uint(u160::from_u64(
-            zkevm_opcode_defs::system_params::DEPLOYER_SYSTEM_CONTRACT_ADDRESS_LOW as u64,
+            crate::zkevm_opcode_defs::system_params::DEPLOYER_SYSTEM_CONTRACT_ADDRESS_LOW as u64,
         )),
         key: target_as_u256,
         read_value: UInt256::zero(),
@@ -1595,7 +1597,8 @@ pub fn may_be_read_code_hash<
 
     let witness =
         witness_oracle.get_storage_read_witness(&storage_key, &should_read, &should_execute);
-    let opcode = zkevm_opcode_defs::Opcode::FarCall(zkevm_opcode_defs::FarCallOpcode::Normal);
+    let opcode =
+        crate::zkevm_opcode_defs::Opcode::FarCall(crate::zkevm_opcode_defs::FarCallOpcode::Normal);
     let marker = opcode.variant_idx() as u64;
     let read_value = UInt256::allocate_in_optimization_context_with_applicability(
         cs,
@@ -1706,7 +1709,7 @@ pub fn add_to_decommittment_queue<
 
     let cost_of_decommittment = UInt32::from_num_unchecked(
         Num::Constant(u64_to_fe(
-            zkevm_opcode_defs::ERGS_PER_CODE_WORD_DECOMMITTMENT as u64,
+            crate::zkevm_opcode_defs::ERGS_PER_CODE_WORD_DECOMMITTMENT as u64,
         ))
         .mul(cs, &num_words_in_bytecode.inner)?,
     );
@@ -1854,7 +1857,7 @@ fn parse_common_abi_part<E: Engine, CS: ConstraintSystem<E>>(
     // far call and ret share ABI in their memory part and forwarding mode part
 
     let forwarding_mode_byte = input.u8x32_view.unwrap()
-        [zkevm_opcode_defs::definitions::abi::far_call::FAR_CALL_FORWARDING_MODE_BYTE_IDX];
+        [crate::zkevm_opcode_defs::definitions::abi::far_call::FAR_CALL_FORWARDING_MODE_BYTE_IDX];
 
     let use_aux_heap = UInt8::equals(
         cs,
@@ -1899,7 +1902,7 @@ fn callstack_candidate_for_ret<E: Engine, CS: ConstraintSystem<E>>(
     pointer_validation_data: &FatPtrValidationData<E>,
 ) -> Result<RetData<E>, SynthesisError> {
     // new callstack should be just the same a the old one, but we also need to update the pricing for pubdata in the rare case
-    let opcode = zkevm_opcode_defs::Opcode::Ret(zkevm_opcode_defs::RetOpcode::Ok);
+    let opcode = crate::zkevm_opcode_defs::Opcode::Ret(crate::zkevm_opcode_defs::RetOpcode::Ok);
     let marker = opcode.variant_idx() as u64;
     let execute = common_opcode_state
         .decoded_opcode
@@ -1908,21 +1911,21 @@ fn callstack_candidate_for_ret<E: Engine, CS: ConstraintSystem<E>>(
     let is_ret_ok = common_opcode_state
         .decoded_opcode
         .properties_bits
-        .boolean_for_variant(zkevm_opcode_defs::Opcode::Ret(
-            zkevm_opcode_defs::RetOpcode::Ok,
+        .boolean_for_variant(crate::zkevm_opcode_defs::Opcode::Ret(
+            crate::zkevm_opcode_defs::RetOpcode::Ok,
         ));
     // revert and panic are different only in ABI: whether we zero-out any hints (returndata) about why we reverted or not
     let is_ret_revert = common_opcode_state
         .decoded_opcode
         .properties_bits
-        .boolean_for_variant(zkevm_opcode_defs::Opcode::Ret(
-            zkevm_opcode_defs::RetOpcode::Revert,
+        .boolean_for_variant(crate::zkevm_opcode_defs::Opcode::Ret(
+            crate::zkevm_opcode_defs::RetOpcode::Revert,
         ));
     let is_ret_panic = common_opcode_state
         .decoded_opcode
         .properties_bits
-        .boolean_for_variant(zkevm_opcode_defs::Opcode::Ret(
-            zkevm_opcode_defs::RetOpcode::Panic,
+        .boolean_for_variant(crate::zkevm_opcode_defs::Opcode::Ret(
+            crate::zkevm_opcode_defs::RetOpcode::Panic,
         ));
 
     let is_local_frame = current_state
@@ -1941,7 +1944,7 @@ fn callstack_candidate_for_ret<E: Engine, CS: ConstraintSystem<E>>(
     let is_to_label = common_opcode_state
         .decoded_opcode
         .properties_bits
-        .flag_booleans[zkevm_opcode_defs::ret::RET_TO_LABEL_BIT_IDX];
+        .flag_booleans[crate::zkevm_opcode_defs::ret::RET_TO_LABEL_BIT_IDX];
     let label_pc = common_opcode_state.decoded_opcode.imm0;
 
     if crate::VERBOSE_CIRCUITS && execute.get_value().unwrap_or(false) {

@@ -2,7 +2,7 @@ use super::*;
 
 pub const NUM_SUPPORTED_AUX_BYTES: usize = 4;
 
-pub use zkevm_opcode_defs::system_params::{
+pub use crate::zkevm_opcode_defs::system_params::{
     EVENT_AUX_BYTE, L1_MESSAGE_AUX_BYTE, PRECOMPILE_AUX_BYTE, STORAGE_AUX_BYTE,
 };
 

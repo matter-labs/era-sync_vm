@@ -31,8 +31,8 @@ impl<E: Engine> ConditionalResolutionTable<E> {
         let mut value = Vec::with_capacity(num_rows);
         let mut map = std::collections::HashMap::with_capacity(num_rows);
 
-        let all_conditions = zkevm_opcode_defs::ALL_CONDITIONS;
-        use zkevm_opcode_defs::Condition;
+        let all_conditions = crate::zkevm_opcode_defs::ALL_CONDITIONS;
+        use crate::zkevm_opcode_defs::Condition;
         for condition in all_conditions.iter() {
             let x = condition.variant_index(); // integer encoding
             for i in 0..(1 << FLAGS_PACKED_ENCODING_BIT_WIDTH) {

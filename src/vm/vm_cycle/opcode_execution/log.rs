@@ -1,5 +1,5 @@
 use super::*;
-use zkevm_opcode_defs::definitions::log::*;
+use crate::zkevm_opcode_defs::definitions::log::*;
 // use crate::vm::supplementary_structs::rollback_witness_handler::RollbackHandlerMode;
 // use super::supplementary_structs::storage::*;
 use super::super::primitives::{UInt16, UInt32, UInt64};
@@ -8,7 +8,7 @@ use crate::scheduler::queues::StorageLogQueue;
 use crate::traits::CSWitnessable;
 use crate::vm::primitives::register_view::Register;
 use crate::vm::vm_state::*;
-use zkevm_opcode_defs::FIRST_MESSAGE_FLAG_IDX;
+use crate::zkevm_opcode_defs::FIRST_MESSAGE_FLAG_IDX;
 
 // Log is currently a generalization of four types of operations.
 // 1) storage load/store: [contract_address | key | read_value | written_value | rw_flag | shard_id]
@@ -238,11 +238,11 @@ pub(crate) fn apply<
 ) -> Result<OpcodePartialApplicationResult<E, PropsMarker>, SynthesisError> {
     let n = cs.get_current_aux_gate_number();
 
-    let storage_read_opcode = zkevm_opcode_defs::Opcode::Log(LogOpcode::StorageRead);
-    let storage_write_opcode = zkevm_opcode_defs::Opcode::Log(LogOpcode::StorageWrite);
-    let to_l1_message_opcode = zkevm_opcode_defs::Opcode::Log(LogOpcode::ToL1Message);
-    let event_opcode = zkevm_opcode_defs::Opcode::Log(LogOpcode::Event);
-    let precompile_call_opcode = zkevm_opcode_defs::Opcode::Log(LogOpcode::PrecompileCall);
+    let storage_read_opcode = crate::zkevm_opcode_defs::Opcode::Log(LogOpcode::StorageRead);
+    let storage_write_opcode = crate::zkevm_opcode_defs::Opcode::Log(LogOpcode::StorageWrite);
+    let to_l1_message_opcode = crate::zkevm_opcode_defs::Opcode::Log(LogOpcode::ToL1Message);
+    let event_opcode = crate::zkevm_opcode_defs::Opcode::Log(LogOpcode::Event);
+    let precompile_call_opcode = crate::zkevm_opcode_defs::Opcode::Log(LogOpcode::PrecompileCall);
 
     let should_apply = common_opcode_state
         .decoded_opcode
@@ -332,7 +332,7 @@ pub(crate) fn apply<
         result
     };
 
-    use zkevm_opcode_defs::system_params::{
+    use crate::zkevm_opcode_defs::system_params::{
         INITIAL_STORAGE_WRITE_PUBDATA_BYTES, L1_MESSAGE_PUBDATA_BYTES,
     };
 

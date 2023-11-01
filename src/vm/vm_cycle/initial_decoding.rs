@@ -1,7 +1,7 @@
 use super::super::helpers::opcode::*;
 use super::*;
 
-use zkevm_opcode_defs::{
+use crate::zkevm_opcode_defs::{
     OPCODE_INPUT_VARIANT_FLAGS, OPCODE_OUTPUT_VARIANT_FLAGS, OPCODE_TYPE_BITS, REGISTERS_COUNT,
 };
 
@@ -68,10 +68,10 @@ pub fn perform_initial_decoding<E: Engine, CS: ConstraintSystem<E>>(
         ergs_left.sub_using_delayed_bool_allocation(cs, &masked_ergs_cost, optimizer)?;
     let ergs_left = ergs_left.mask(cs, &out_of_ergs_exception.not())?; // it's 0 if mask is 0, otherwise initial value
 
-    let requires_kernel_mode = aux_bools[zkevm_opcode_defs::KERNER_MODE_FLAG_IDX];
+    let requires_kernel_mode = aux_bools[crate::zkevm_opcode_defs::KERNER_MODE_FLAG_IDX];
     let can_be_used_in_static_context =
-        aux_bools[zkevm_opcode_defs::CAN_BE_USED_IN_STATIC_CONTEXT_FLAG_IDX];
-    let explicit_panic = aux_bools[zkevm_opcode_defs::EXPLICIT_PANIC_FLAG_IDX];
+        aux_bools[crate::zkevm_opcode_defs::CAN_BE_USED_IN_STATIC_CONTEXT_FLAG_IDX];
+    let explicit_panic = aux_bools[crate::zkevm_opcode_defs::EXPLICIT_PANIC_FLAG_IDX];
 
     let kernel_mode_exception = smart_and(cs, &[requires_kernel_mode, is_kernel_mode.not()])?;
     let write_in_static_exception = smart_and(
@@ -113,7 +113,7 @@ pub fn perform_initial_decoding<E: Engine, CS: ConstraintSystem<E>>(
     let mask_into_panic = any_exception;
     // dbg!(mask_into_panic.get_value());
     // let panic_encoding = *zkevm_opcode_defs::PANIC_ENCODING_U64;
-    let panic_encoding = *zkevm_opcode_defs::PANIC_BITSPREAD_U64;
+    let panic_encoding = *crate::zkevm_opcode_defs::PANIC_BITSPREAD_U64;
     // println!("PANIC mask encoding = 0x{:016x}", panic_encoding);
     // mask out aux bits (those are 0, but do it just in case)
     let panic_encoding = panic_encoding & OPCODE_PROPS_BITMASK_FOR_BITSPREAD_ENCODING;
@@ -133,7 +133,7 @@ pub fn perform_initial_decoding<E: Engine, CS: ConstraintSystem<E>>(
     )?;
     // dbg!(mask_into_nop.get_value());
     // let nop_encoding = *zkevm_opcode_defs::NOP_ENCODING_U64;
-    let nop_encoding = *zkevm_opcode_defs::NOP_BITSPREAD_U64;
+    let nop_encoding = *crate::zkevm_opcode_defs::NOP_BITSPREAD_U64;
     // println!("NOP mask encoding = 0x{:016x}", nop_encoding);
     // mask out aux bits (those are 0, but do it just in case)
     let nop_encoding = nop_encoding & OPCODE_PROPS_BITMASK_FOR_BITSPREAD_ENCODING;

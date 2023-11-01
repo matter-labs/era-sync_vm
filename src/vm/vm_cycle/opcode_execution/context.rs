@@ -17,36 +17,36 @@ pub(crate) fn apply<
 ) -> Result<OpcodePartialApplicationResult<E, PropsMarker>, SynthesisError> {
     let n = cs.get_current_aux_gate_number();
 
-    let retrieve_this_opcode = zkevm_opcode_defs::Opcode::Context(
-        zkevm_opcode_defs::definitions::context::ContextOpcode::This,
+    let retrieve_this_opcode = crate::zkevm_opcode_defs::Opcode::Context(
+        crate::zkevm_opcode_defs::definitions::context::ContextOpcode::This,
     );
-    let retrieve_caller_opcode = zkevm_opcode_defs::Opcode::Context(
-        zkevm_opcode_defs::definitions::context::ContextOpcode::Caller,
+    let retrieve_caller_opcode = crate::zkevm_opcode_defs::Opcode::Context(
+        crate::zkevm_opcode_defs::definitions::context::ContextOpcode::Caller,
     );
-    let retrieve_code_address_opcode = zkevm_opcode_defs::Opcode::Context(
-        zkevm_opcode_defs::definitions::context::ContextOpcode::CodeAddress,
+    let retrieve_code_address_opcode = crate::zkevm_opcode_defs::Opcode::Context(
+        crate::zkevm_opcode_defs::definitions::context::ContextOpcode::CodeAddress,
     );
-    let retrieve_meta_opcode = zkevm_opcode_defs::Opcode::Context(
-        zkevm_opcode_defs::definitions::context::ContextOpcode::Meta,
+    let retrieve_meta_opcode = crate::zkevm_opcode_defs::Opcode::Context(
+        crate::zkevm_opcode_defs::definitions::context::ContextOpcode::Meta,
     );
-    let retrieve_ergs_left_opcode = zkevm_opcode_defs::Opcode::Context(
-        zkevm_opcode_defs::definitions::context::ContextOpcode::ErgsLeft,
+    let retrieve_ergs_left_opcode = crate::zkevm_opcode_defs::Opcode::Context(
+        crate::zkevm_opcode_defs::definitions::context::ContextOpcode::ErgsLeft,
     );
-    let retrieve_sp_opcode = zkevm_opcode_defs::Opcode::Context(
-        zkevm_opcode_defs::definitions::context::ContextOpcode::Sp,
+    let retrieve_sp_opcode = crate::zkevm_opcode_defs::Opcode::Context(
+        crate::zkevm_opcode_defs::definitions::context::ContextOpcode::Sp,
     );
-    let get_context_u128_opcode = zkevm_opcode_defs::Opcode::Context(
-        zkevm_opcode_defs::definitions::context::ContextOpcode::GetContextU128,
+    let get_context_u128_opcode = crate::zkevm_opcode_defs::Opcode::Context(
+        crate::zkevm_opcode_defs::definitions::context::ContextOpcode::GetContextU128,
     );
     // attempt to execute in non-kernel mode for this opcode would be caught before
-    let set_context_u128_opcode = zkevm_opcode_defs::Opcode::Context(
-        zkevm_opcode_defs::definitions::context::ContextOpcode::SetContextU128,
+    let set_context_u128_opcode = crate::zkevm_opcode_defs::Opcode::Context(
+        crate::zkevm_opcode_defs::definitions::context::ContextOpcode::SetContextU128,
     );
-    let set_pubdata_ergs_opcode = zkevm_opcode_defs::Opcode::Context(
-        zkevm_opcode_defs::definitions::context::ContextOpcode::SetErgsPerPubdataByte,
+    let set_pubdata_ergs_opcode = crate::zkevm_opcode_defs::Opcode::Context(
+        crate::zkevm_opcode_defs::definitions::context::ContextOpcode::SetErgsPerPubdataByte,
     );
-    let increment_tx_num_opcode = zkevm_opcode_defs::Opcode::Context(
-        zkevm_opcode_defs::definitions::context::ContextOpcode::IncrementTxNumber,
+    let increment_tx_num_opcode = crate::zkevm_opcode_defs::Opcode::Context(
+        crate::zkevm_opcode_defs::definitions::context::ContextOpcode::IncrementTxNumber,
     );
 
     let should_apply = {

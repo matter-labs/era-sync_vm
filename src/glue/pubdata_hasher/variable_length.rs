@@ -124,8 +124,8 @@ pub fn hash_pubdata_inner<
     // we can precompute special case, which is empty input queue,
     // so we will hash 4x0 bytes
 
-    use sha3::Digest;
-    let empty_input_hash = sha3::Keccak256::digest(&[0u8; 4]);
+    use crate::zkevm_opcode_defs::sha3::Digest;
+    let empty_input_hash = zkevm_opcode_defs::sha3::Keccak256::digest(&[0u8; 4]);
     let mut byte_array = [0u8; 32];
     byte_array.copy_from_slice(empty_input_hash.as_slice());
     let empty_output_hash = Bytes32::<E>::constant_from_bytes(&byte_array);

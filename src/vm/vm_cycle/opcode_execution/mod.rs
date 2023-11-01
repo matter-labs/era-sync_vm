@@ -1,6 +1,6 @@
 use super::*;
 
-use zkevm_opcode_defs::SET_FLAGS_FLAG_IDX;
+use crate::zkevm_opcode_defs::SET_FLAGS_FLAG_IDX;
 
 pub mod add;
 pub mod binop;
@@ -37,8 +37,8 @@ impl<E: Engine> InCircuitOpcode<E> for PropsMarker {
         witness_oracle: &mut impl WitnessOracle<E>,
     ) -> Result<OpcodePartialApplicationResult<E, Self>, SynthesisError> {
         match self {
-            PropsMarker::Normal(zkevm_opcode_defs::Opcode::Invalid(_)) => unreachable!(),
-            PropsMarker::Normal(zkevm_opcode_defs::Opcode::Nop(_)) => self::nop::apply(
+            PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Invalid(_)) => unreachable!(),
+            PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Nop(_)) => self::nop::apply(
                 cs,
                 current_state,
                 common_opcode_state,
@@ -48,7 +48,7 @@ impl<E: Engine> InCircuitOpcode<E> for PropsMarker {
                 round_function,
                 witness_oracle,
             ),
-            PropsMarker::Normal(zkevm_opcode_defs::Opcode::Add(_)) => self::add::apply(
+            PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Add(_)) => self::add::apply(
                 cs,
                 current_state,
                 common_opcode_state,
@@ -58,7 +58,7 @@ impl<E: Engine> InCircuitOpcode<E> for PropsMarker {
                 round_function,
                 witness_oracle,
             ),
-            PropsMarker::Normal(zkevm_opcode_defs::Opcode::Sub(_)) => self::sub::apply(
+            PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Sub(_)) => self::sub::apply(
                 cs,
                 current_state,
                 common_opcode_state,
@@ -68,7 +68,7 @@ impl<E: Engine> InCircuitOpcode<E> for PropsMarker {
                 round_function,
                 witness_oracle,
             ),
-            PropsMarker::Normal(zkevm_opcode_defs::Opcode::Mul(_)) => self::mul::apply(
+            PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Mul(_)) => self::mul::apply(
                 cs,
                 current_state,
                 common_opcode_state,
@@ -78,7 +78,7 @@ impl<E: Engine> InCircuitOpcode<E> for PropsMarker {
                 round_function,
                 witness_oracle,
             ),
-            PropsMarker::Normal(zkevm_opcode_defs::Opcode::Div(_)) => self::div::apply(
+            PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Div(_)) => self::div::apply(
                 cs,
                 current_state,
                 common_opcode_state,
@@ -88,7 +88,7 @@ impl<E: Engine> InCircuitOpcode<E> for PropsMarker {
                 round_function,
                 witness_oracle,
             ),
-            PropsMarker::Normal(zkevm_opcode_defs::Opcode::Jump(_)) => self::jump::apply(
+            PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Jump(_)) => self::jump::apply(
                 cs,
                 current_state,
                 common_opcode_state,
@@ -98,7 +98,19 @@ impl<E: Engine> InCircuitOpcode<E> for PropsMarker {
                 round_function,
                 witness_oracle,
             ),
-            PropsMarker::Normal(zkevm_opcode_defs::Opcode::Context(_)) => self::context::apply(
+            PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Context(_)) => {
+                self::context::apply(
+                    cs,
+                    current_state,
+                    common_opcode_state,
+                    opcode_carry_parts,
+                    global_context,
+                    optimizer,
+                    round_function,
+                    witness_oracle,
+                )
+            }
+            PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Shift(_)) => self::shift::apply(
                 cs,
                 current_state,
                 common_opcode_state,
@@ -108,7 +120,7 @@ impl<E: Engine> InCircuitOpcode<E> for PropsMarker {
                 round_function,
                 witness_oracle,
             ),
-            PropsMarker::Normal(zkevm_opcode_defs::Opcode::Shift(_)) => self::shift::apply(
+            PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Ptr(_)) => self::ptr::apply(
                 cs,
                 current_state,
                 common_opcode_state,
@@ -118,7 +130,7 @@ impl<E: Engine> InCircuitOpcode<E> for PropsMarker {
                 round_function,
                 witness_oracle,
             ),
-            PropsMarker::Normal(zkevm_opcode_defs::Opcode::Ptr(_)) => self::ptr::apply(
+            PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Binop(_)) => self::binop::apply(
                 cs,
                 current_state,
                 common_opcode_state,
@@ -128,7 +140,7 @@ impl<E: Engine> InCircuitOpcode<E> for PropsMarker {
                 round_function,
                 witness_oracle,
             ),
-            PropsMarker::Normal(zkevm_opcode_defs::Opcode::Binop(_)) => self::binop::apply(
+            PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Log(_)) => self::log::apply(
                 cs,
                 current_state,
                 common_opcode_state,
@@ -138,17 +150,7 @@ impl<E: Engine> InCircuitOpcode<E> for PropsMarker {
                 round_function,
                 witness_oracle,
             ),
-            PropsMarker::Normal(zkevm_opcode_defs::Opcode::Log(_)) => self::log::apply(
-                cs,
-                current_state,
-                common_opcode_state,
-                opcode_carry_parts,
-                global_context,
-                optimizer,
-                round_function,
-                witness_oracle,
-            ),
-            PropsMarker::Normal(zkevm_opcode_defs::Opcode::UMA(_)) => self::uma::apply(
+            PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::UMA(_)) => self::uma::apply(
                 cs,
                 current_state,
                 common_opcode_state,

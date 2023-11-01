@@ -32,7 +32,7 @@ impl<E: Engine, const SWIDTH: usize> Callstack<E, SWIDTH> {
         UInt32::equals(
             cs,
             &self.context_stack_depth,
-            &UInt32::from_uint(zkevm_opcode_defs::system_params::VM_MAX_STACK_DEPTH),
+            &UInt32::from_uint(crate::zkevm_opcode_defs::system_params::VM_MAX_STACK_DEPTH),
         )
     }
 }

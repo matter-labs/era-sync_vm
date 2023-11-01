@@ -85,7 +85,7 @@ use franklin_crypto::plonk::circuit::hashes_with_tables::keccak::gadgets::{
     Keccak256Gadget, KeccakState,
 };
 
-use sha3::Digest;
+use crate::zkevm_opcode_defs::sha3::Digest;
 
 type Keccak256InnerState = [u64; 25];
 
@@ -106,7 +106,7 @@ struct Keccak256VarCore {
     state: Keccak256InnerState,
 }
 
-fn transmute_state(reference_state: sha3::Keccak256) -> Keccak256InnerState {
+fn transmute_state(reference_state: zkevm_opcode_defs::sha3::Keccak256) -> Keccak256InnerState {
     // we use a trick that size of both structures is the same, and even though we do not know a stable field layout,
     // we can replicate it
     let our_wrapper: CoreWrapper = unsafe { std::mem::transmute(reference_state) };
@@ -115,19 +115,19 @@ fn transmute_state(reference_state: sha3::Keccak256) -> Keccak256InnerState {
 }
 
 pub struct KeccakSelfVerifier {
-    internal_state: sha3::Keccak256,
+    internal_state: zkevm_opcode_defs::sha3::Keccak256,
     buffer: zk_evm::zk_evm_abstractions::precompiles::keccak256::Buffer,
 }
 
 impl KeccakSelfVerifier {
     pub fn new() -> Self {
         Self {
-            internal_state: sha3::Keccak256::new(),
+            internal_state: zkevm_opcode_defs::sha3::Keccak256::new(),
             buffer: zk_evm::zk_evm_abstractions::precompiles::keccak256::Buffer::new(),
         }
     }
     pub fn reset(&mut self) {
-        self.internal_state = sha3::Keccak256::new();
+        self.internal_state = zkevm_opcode_defs::sha3::Keccak256::new();
         self.buffer.reset();
     }
     pub fn add_to_buffer<E: Engine>(

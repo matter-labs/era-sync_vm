@@ -68,14 +68,18 @@ pub(crate) fn apply<
 ) -> Result<OpcodePartialApplicationResult<E, PropsMarker>, SynthesisError> {
     let n = cs.get_current_aux_gate_number();
 
-    let rol_opcode =
-        zkevm_opcode_defs::Opcode::Shift(zkevm_opcode_defs::definitions::shift::ShiftOpcode::Rol);
-    let ror_opcode =
-        zkevm_opcode_defs::Opcode::Shift(zkevm_opcode_defs::definitions::shift::ShiftOpcode::Ror);
-    let shl_opcode =
-        zkevm_opcode_defs::Opcode::Shift(zkevm_opcode_defs::definitions::shift::ShiftOpcode::Shl);
-    let shr_opcode =
-        zkevm_opcode_defs::Opcode::Shift(zkevm_opcode_defs::definitions::shift::ShiftOpcode::Shr);
+    let rol_opcode = crate::zkevm_opcode_defs::Opcode::Shift(
+        crate::zkevm_opcode_defs::definitions::shift::ShiftOpcode::Rol,
+    );
+    let ror_opcode = crate::zkevm_opcode_defs::Opcode::Shift(
+        crate::zkevm_opcode_defs::definitions::shift::ShiftOpcode::Ror,
+    );
+    let shl_opcode = crate::zkevm_opcode_defs::Opcode::Shift(
+        crate::zkevm_opcode_defs::definitions::shift::ShiftOpcode::Shl,
+    );
+    let shr_opcode = crate::zkevm_opcode_defs::Opcode::Shift(
+        crate::zkevm_opcode_defs::definitions::shift::ShiftOpcode::Shr,
+    );
 
     let should_apply = common_opcode_state
         .decoded_opcode
@@ -127,7 +131,7 @@ pub(crate) fn apply<
 
     let (chunk0, chunk1) = apply_table(cs, &final_shift, shift_low_table, true)?;
     let (chunk2, chunk3) = apply_table(cs, &final_shift, shift_high_table, false)?;
-    let full_shift = RegisterInputView {
+    let mut full_shift = RegisterInputView {
         u8x32_view: None,
         lowest160: None,
         decomposed_lowest160: None,
@@ -140,8 +144,22 @@ pub(crate) fn apply<
     // for right_shift : a = rshift_q, b = full_shift, remainder = rshift_r, high = 0, low = reg
     let is_right_shift = Boolean::and(cs, &is_right, &is_cyclic.not())?;
     let apply_right_shift = Boolean::and(cs, &should_apply, &is_right_shift)?;
-    let (rshift_q, _rshift_r) =
+    let (rshift_q, rshift_r) =
         optimizer.add_div_relation(cs, &reg, &full_shift, apply_right_shift, marker)?;
+
+    // as we do division we need to check that rshift_r is < divisor, and divisor != 0 by construction
+    // for add/sub relation we need u128 view for full_shift
+    full_shift.compute_u128_view(cs)?;
+
+    let (_unused, underflow) = optimizer.add_subtraction_relation(
+        cs,
+        &rshift_r,
+        &full_shift,
+        apply_right_shift,
+        marker,
+    )?;
+    // and we should have underflow (so remainder < divisor) is "true" if we do right shift
+    can_not_be_false_if_flagged(cs, &underflow, &apply_right_shift)?;
 
     // for left_shift: a = reg, b = full_shuft, remainder = 0, high = lshift_high, low = lshift_low
     let next_marker = marker.advance();

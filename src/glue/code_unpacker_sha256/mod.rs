@@ -293,7 +293,7 @@ pub fn unpack_code_into_memory_inner<
 
     let sha256_gadget = Sha256Gadget::new(cs, None, None, false, false, 0, "")?;
 
-    use zkevm_opcode_defs::VersionedHashDef;
+    use crate::zkevm_opcode_defs::VersionedHashDef;
     let versioned_hash_top_16_bits =
         (zkevm_opcode_defs::versioned_hash::ContractCodeSha256::VERSION_BYTE as u16) << 8;
 

@@ -1,6 +1,6 @@
 use super::*;
+use crate::zkevm_opcode_defs::BOOTLOADER_CODE_PAGE;
 use cs_derive::*;
-use zkevm_opcode_defs::BOOTLOADER_CODE_PAGE;
 
 use crate::bellman::SynthesisError;
 use crate::data_structures::markers::*;
