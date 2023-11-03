@@ -13,7 +13,7 @@ pub fn mask_into_nop<E: Engine, CS: ConstraintSystem<E>>(
     should_mask: &Boolean,
     opcode: UInt64<E>,
 ) -> Result<UInt64<E>, SynthesisError> {
-    use zkevm_opcode_defs::decoding::*;
+    use crate::zkevm_opcode_defs::decoding::*;
     let nop_encoding = EncodingModeProduction::nop_encoding();
     let constant = nop_encoding;
     let nop_opcode = UInt64::from_uint(constant);
@@ -26,7 +26,7 @@ pub fn mask_into_panic<E: Engine, CS: ConstraintSystem<E>>(
     should_mask: &Boolean,
     opcode: UInt64<E>,
 ) -> Result<UInt64<E>, SynthesisError> {
-    use zkevm_opcode_defs::decoding::*;
+    use crate::zkevm_opcode_defs::decoding::*;
     let panic_encoding = EncodingModeProduction::exception_revert_encoding();
     let constant = panic_encoding;
     let panic_opcode = UInt64::from_uint(constant);

@@ -124,8 +124,8 @@ pub fn hash_pubdata_inner<
     // we can precompute special case, which is empty input queue,
     // so we will hash 4x0 bytes
 
-    use sha3::Digest;
-    let empty_input_hash = sha3::Keccak256::digest(&[0u8; 4]);
+    use crate::zkevm_opcode_defs::sha3::Digest;
+    let empty_input_hash = zkevm_opcode_defs::sha3::Keccak256::digest(&[0u8; 4]);
     let mut byte_array = [0u8; 32];
     byte_array.copy_from_slice(empty_input_hash.as_slice());
     let empty_output_hash = Bytes32::<E>::constant_from_bytes(&byte_array);
@@ -363,8 +363,8 @@ mod test {
             FixedWidthEncodingGenericQueue::<_, InitialStorageWriteData<_>, 3>::empty();
         // trick to prevent constant prop
         input_queue.num_items = UInt32::alloc_from_witness(cs, Some(0))?;
-        use sha3::Digest;
-        let empty_input_hash = sha3::Keccak256::digest(&[0u8; 4]);
+        use crate::zkevm_opcode_defs::sha3::{Digest, Keccak256};
+        let empty_input_hash = Keccak256::digest(&[0u8; 4]);
         let mut byte_array = [0u8; 32];
         byte_array.copy_from_slice(empty_input_hash.as_slice());
 
@@ -417,8 +417,8 @@ mod test {
 
         input_queue.push(cs, &el, &Boolean::Constant(true), &round_function)?;
 
-        use sha3::Digest;
-        let mut hasher = sha3::Keccak256::new();
+        use crate::zkevm_opcode_defs::sha3::{Digest, Keccak256};
+        let mut hasher = Keccak256::new();
         hasher.update(&1u32.to_be_bytes()); // 1u32 BE
         hasher.update(&[1u8; 32]);
         hasher.update(&[2u8; 32]);
@@ -492,8 +492,8 @@ mod test {
 
         input_queue.push(cs, &el, &Boolean::Constant(true), &round_function)?;
 
-        use sha3::Digest;
-        let mut hasher = sha3::Keccak256::new();
+        use crate::zkevm_opcode_defs::sha3::{Digest, Keccak256};
+        let mut hasher = Keccak256::new();
         hasher.update(&3u32.to_be_bytes());
         hasher.update(&[1u8; 32]);
         hasher.update(&[2u8; 32]);
@@ -560,8 +560,8 @@ mod test {
             input_queue.push(cs, &el, &bool_true, &round_function)?;
         }
 
-        use sha3::Digest;
-        let mut hasher = sha3::Keccak256::new();
+        use crate::zkevm_opcode_defs::sha3::{Digest, Keccak256};
+        let mut hasher = Keccak256::new();
         hasher.update(&3u32.to_be_bytes());
         for _ in 0..3 {
             hasher.update(&[1u8; 32]);
@@ -626,8 +626,8 @@ mod test {
             input_queue.push(cs, &el, &bool_true, &round_function)?;
         }
 
-        use sha3::Digest;
-        let mut hasher = sha3::Keccak256::new();
+        use crate::zkevm_opcode_defs::sha3::{Digest, Keccak256};
+        let mut hasher = Keccak256::new();
         hasher.update(&16u32.to_be_bytes());
         for _ in 0..16 {
             hasher.update(&[1u8; 32]);

@@ -1,4 +1,4 @@
-use zkevm_opcode_defs::BOOTLOADER_HEAP_PAGE;
+use crate::zkevm_opcode_defs::BOOTLOADER_HEAP_PAGE;
 
 use super::memory_queries_validity::ram_permutation_inout::RamPermutationCycleInputOutput;
 use super::*;

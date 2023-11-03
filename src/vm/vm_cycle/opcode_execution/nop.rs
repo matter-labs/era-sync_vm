@@ -16,7 +16,7 @@ pub(crate) fn apply<
 ) -> Result<OpcodePartialApplicationResult<E, PropsMarker>, SynthesisError> {
     let n = cs.get_current_aux_gate_number();
 
-    let opcode = zkevm_opcode_defs::Opcode::Nop(zkevm_opcode_defs::NopOpcode);
+    let opcode = crate::zkevm_opcode_defs::Opcode::Nop(crate::zkevm_opcode_defs::NopOpcode);
     let should_apply = common_opcode_state
         .decoded_opcode
         .properties_bits

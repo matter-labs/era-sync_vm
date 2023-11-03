@@ -17,10 +17,14 @@ pub(crate) fn apply<
 ) -> Result<OpcodePartialApplicationResult<E, PropsMarker>, SynthesisError> {
     let n = cs.get_current_aux_gate_number();
 
-    let ptr_add_opcode = zkevm_opcode_defs::Opcode::Ptr(zkevm_opcode_defs::PtrOpcode::Add);
-    let ptr_sub_opcode = zkevm_opcode_defs::Opcode::Ptr(zkevm_opcode_defs::PtrOpcode::Sub);
-    let ptr_pack_opcode = zkevm_opcode_defs::Opcode::Ptr(zkevm_opcode_defs::PtrOpcode::Pack);
-    let ptr_shrink_opcode = zkevm_opcode_defs::Opcode::Ptr(zkevm_opcode_defs::PtrOpcode::Shrink);
+    let ptr_add_opcode =
+        crate::zkevm_opcode_defs::Opcode::Ptr(crate::zkevm_opcode_defs::PtrOpcode::Add);
+    let ptr_sub_opcode =
+        crate::zkevm_opcode_defs::Opcode::Ptr(crate::zkevm_opcode_defs::PtrOpcode::Sub);
+    let ptr_pack_opcode =
+        crate::zkevm_opcode_defs::Opcode::Ptr(crate::zkevm_opcode_defs::PtrOpcode::Pack);
+    let ptr_shrink_opcode =
+        crate::zkevm_opcode_defs::Opcode::Ptr(crate::zkevm_opcode_defs::PtrOpcode::Shrink);
 
     let should_apply = common_opcode_state
         .decoded_opcode

@@ -1,6 +1,6 @@
 use super::*;
 
-use zkevm_opcode_defs::{
+use crate::zkevm_opcode_defs::{
     ISAVersion, ImmMemHandlerFlags, OPCODE_INPUT_VARIANT_FLAGS, OPCODE_OUTPUT_VARIANT_FLAGS,
     OPCODE_TYPE_BITS, TOTAL_AUX_BITS,
 };
@@ -9,7 +9,7 @@ use zkevm_opcode_defs::{
 
 pub const SUPPORTED_ISA_VERSION: ISAVersion = ISAVersion(1);
 
-const _: () = if SUPPORTED_ISA_VERSION.0 != zkevm_opcode_defs::DEFAULT_ISA_VERSION.0 {
+const _: () = if SUPPORTED_ISA_VERSION.0 != crate::zkevm_opcode_defs::DEFAULT_ISA_VERSION.0 {
     panic!()
 } else {
     ()
@@ -42,7 +42,7 @@ pub struct OpcodeBitmask<E: Engine> {
     _marker: std::marker::PhantomData<E>,
 }
 
-use zkevm_opcode_defs::Opcode;
+use crate::zkevm_opcode_defs::Opcode;
 
 impl<E: Engine> OpcodeBitmask<E> {
     pub fn boolean_for_opcode(&self, opcode: Opcode) -> Boolean {
@@ -70,15 +70,17 @@ impl<E: Engine> OpcodeBitmask<E> {
         // assert to not mismatch alignments
         assert_eq!(
             OPCODE_VARIANT_BITS,
-            zkevm_opcode_defs::max_num_variants_for_version(SUPPORTED_ISA_VERSION)
+            crate::zkevm_opcode_defs::max_num_variants_for_version(SUPPORTED_ISA_VERSION)
         );
         assert_eq!(
             OPCODE_FLAGS_BITS,
-            zkevm_opcode_defs::max_num_flags_for_version(SUPPORTED_ISA_VERSION)
+            crate::zkevm_opcode_defs::max_num_flags_for_version(SUPPORTED_ISA_VERSION)
         );
         assert_eq!(
             TOTAL_OPCODE_DESCRIPTION_BITS_FLATTENED,
-            zkevm_opcode_defs::total_description_bits_rounded_for_version(SUPPORTED_ISA_VERSION)
+            crate::zkevm_opcode_defs::total_description_bits_rounded_for_version(
+                SUPPORTED_ISA_VERSION
+            )
         );
 
         let mut offset = 0;

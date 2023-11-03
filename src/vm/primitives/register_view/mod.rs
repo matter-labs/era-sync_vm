@@ -296,6 +296,38 @@ impl<E: Engine> RegisterInputView<E> {
         Some(base)
     }
 
+    pub fn compute_u128_view<CS: ConstraintSystem<E>>(
+        &mut self,
+        cs: &mut CS,
+    ) -> Result<(), SynthesisError> {
+        assert!(self.u64x4_view.is_some());
+
+        if self.u128x2_view.is_some() {
+            return Ok(());
+        }
+
+        let shifts = compute_shifts::<E::Fr>();
+
+        let mut result = [UInt128::zero(); 2];
+        for (dst, src) in result
+            .iter_mut()
+            .zip(self.u64x4_view.as_ref().unwrap().chunks(2))
+        {
+            let mut lc = LinearCombination::zero();
+            let mut shift = 0;
+            for c in src.iter() {
+                lc.add_assign_number_with_coeff(&c.inner, shifts[shift]);
+                shift += 64;
+            }
+            let el = lc.into_num(cs)?;
+            *dst = UInt128::from_num_unchecked(el);
+        }
+
+        self.u128x2_view = Some(result);
+
+        Ok(())
+    }
+
     pub fn from_input_value<CS>(cs: &mut CS, value: &Register<E>) -> Result<Self, SynthesisError>
     where
         CS: ConstraintSystem<E>,

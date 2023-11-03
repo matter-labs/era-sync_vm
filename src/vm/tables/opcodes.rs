@@ -15,7 +15,7 @@ pub struct OpcodeDecodingTable<E: Engine> {
 
 impl<E: Engine> OpcodeDecodingTable<E> {
     pub fn new(name: &'static str) -> Self {
-        let num_rows = zkevm_opcode_defs::OPCODES_TABLE.len();
+        let num_rows = crate::zkevm_opcode_defs::OPCODES_TABLE.len();
         let mut key = Vec::with_capacity(num_rows);
         let mut value_0 = Vec::with_capacity(num_rows);
         let mut value_1 = Vec::with_capacity(num_rows);
@@ -23,8 +23,8 @@ impl<E: Engine> OpcodeDecodingTable<E> {
 
         for x in 0..num_rows {
             let opcode_as_integer = x as u64;
-            let opcode_props_encoding = zkevm_opcode_defs::OPCODES_PROPS_INTEGER_BITMASKS[x];
-            let price = zkevm_opcode_defs::OPCODES_PRICES[x];
+            let opcode_props_encoding = crate::zkevm_opcode_defs::OPCODES_PROPS_INTEGER_BITMASKS[x];
+            let price = crate::zkevm_opcode_defs::OPCODES_PRICES[x];
 
             let x_fr = u64_to_fe(opcode_as_integer);
             let y_fr = u64_to_fe(price as u64);

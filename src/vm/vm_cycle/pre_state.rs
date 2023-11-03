@@ -5,8 +5,8 @@ use crate::vm::primitives::register_view::*;
 use crate::vm::vm_cycle::opcode_bitmask::SUPPORTED_ISA_VERSION;
 use crate::vm::vm_cycle::witness_oracle::WitnessOracle;
 use crate::vm::vm_state::callstack::Callstack;
+use crate::zkevm_opcode_defs::NopOpcode;
 use cs_derive::*;
-use zkevm_opcode_defs::NopOpcode;
 
 use crate::vm::helpers::skip_cycle::*;
 
@@ -235,12 +235,9 @@ pub fn create_prestate<
     // decoded opcode and current (yet dirty) ergs left should be passed into the opcode
 
     // we did all the masking and "INVALID" opcode must never happed
-    let invalid_opcode_bit =
-        decoded_opcode
-            .properties_bits
-            .boolean_for_opcode(zkevm_opcode_defs::Opcode::Invalid(
-                zkevm_opcode_defs::InvalidOpcode,
-            ));
+    let invalid_opcode_bit = decoded_opcode.properties_bits.boolean_for_opcode(
+        crate::zkevm_opcode_defs::Opcode::Invalid(crate::zkevm_opcode_defs::InvalidOpcode),
+    );
 
     Boolean::enforce_equal(cs, &invalid_opcode_bit, &Boolean::constant(false))?;
 
@@ -355,7 +352,7 @@ pub fn create_prestate<
 
     // select source0 and source1
 
-    use zkevm_opcode_defs::ImmMemHandlerFlags;
+    use crate::zkevm_opcode_defs::ImmMemHandlerFlags;
 
     // select if it was reg
     let src0 = Register::conditionally_select(
@@ -386,7 +383,7 @@ pub fn create_prestate<
     let swap_operands = {
         // Opcode::Sub(_) | Opcode::Div(_) | Opcode::Shift(_) => self.flags[SWAP_OPERANDS_FLAG_IDX],
 
-        use zkevm_opcode_defs::*;
+        use crate::zkevm_opcode_defs::*;
 
         let is_sub = decoded_opcode
             .properties_bits
@@ -515,7 +512,7 @@ pub struct OpcodeCarryParts<E: Engine> {
     pub pc_plus_one: UInt16<E>,
 }
 
-use zkevm_opcode_defs::ISAVersion;
+use crate::zkevm_opcode_defs::ISAVersion;
 
 pub trait PartialOpcodePropsMarker: Clone + std::fmt::Debug {
     fn can_have_src0_from_mem(&self, version: ISAVersion) -> bool;
@@ -523,32 +520,34 @@ pub trait PartialOpcodePropsMarker: Clone + std::fmt::Debug {
     fn default() -> Self;
 }
 
-impl PartialOpcodePropsMarker for zkevm_opcode_defs::Opcode {
+impl PartialOpcodePropsMarker for crate::zkevm_opcode_defs::Opcode {
     fn can_have_src0_from_mem(&self, version: ISAVersion) -> bool {
-        zkevm_opcode_defs::Opcode::can_have_src0_from_mem(self, version)
+        crate::zkevm_opcode_defs::Opcode::can_have_src0_from_mem(self, version)
     }
 
     fn can_write_dst0_into_memory(&self, version: ISAVersion) -> bool {
-        zkevm_opcode_defs::Opcode::can_write_dst0_into_memory(self, version)
+        crate::zkevm_opcode_defs::Opcode::can_write_dst0_into_memory(self, version)
     }
 
     fn default() -> Self {
-        zkevm_opcode_defs::Opcode::Invalid(zkevm_opcode_defs::definitions::InvalidOpcode)
+        crate::zkevm_opcode_defs::Opcode::Invalid(
+            crate::zkevm_opcode_defs::definitions::InvalidOpcode,
+        )
     }
 }
 
 #[derive(Clone, Copy, Debug)]
 pub enum SpecializedImplementationPropsMarker {
     CallRet(
-        zkevm_opcode_defs::NearCallOpcode,
-        zkevm_opcode_defs::FarCallOpcode,
-        zkevm_opcode_defs::RetOpcode,
+        crate::zkevm_opcode_defs::NearCallOpcode,
+        crate::zkevm_opcode_defs::FarCallOpcode,
+        crate::zkevm_opcode_defs::RetOpcode,
     ),
 }
 
 #[derive(Clone, Copy, Debug)]
 pub enum PropsMarker {
-    Normal(zkevm_opcode_defs::Opcode),
+    Normal(crate::zkevm_opcode_defs::Opcode),
     Specialized(SpecializedImplementationPropsMarker),
 }
 
@@ -568,7 +567,7 @@ impl PartialOpcodePropsMarker for PropsMarker {
     }
 
     fn default() -> Self {
-        PropsMarker::Normal(zkevm_opcode_defs::Opcode::Nop(NopOpcode))
+        PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Nop(NopOpcode))
     }
 }
 
@@ -576,36 +575,40 @@ pub const NUM_MARKER_BRANCHES: usize = 13;
 pub const ALL_OPCODE_MARKERS: [PropsMarker; NUM_MARKER_BRANCHES] = all_markers();
 
 pub const fn all_markers() -> [PropsMarker; NUM_MARKER_BRANCHES] {
-    use zkevm_opcode_defs::*;
+    use crate::zkevm_opcode_defs::*;
 
     [
-        PropsMarker::Normal(zkevm_opcode_defs::Opcode::Nop(NopOpcode)),
-        PropsMarker::Normal(zkevm_opcode_defs::Opcode::Add(AddOpcode::Add)),
-        PropsMarker::Normal(zkevm_opcode_defs::Opcode::Sub(SubOpcode::Sub)),
-        PropsMarker::Normal(zkevm_opcode_defs::Opcode::Mul(MulOpcode)),
-        PropsMarker::Normal(zkevm_opcode_defs::Opcode::Div(DivOpcode)),
-        PropsMarker::Normal(zkevm_opcode_defs::Opcode::Jump(JumpOpcode)),
-        PropsMarker::Normal(zkevm_opcode_defs::Opcode::Ptr(PtrOpcode::Add)),
-        PropsMarker::Normal(zkevm_opcode_defs::Opcode::Context(ContextOpcode::Caller)),
-        PropsMarker::Normal(zkevm_opcode_defs::Opcode::Shift(ShiftOpcode::Shl)),
-        PropsMarker::Normal(zkevm_opcode_defs::Opcode::Binop(BinopOpcode::Xor)),
-        PropsMarker::Normal(zkevm_opcode_defs::Opcode::Log(LogOpcode::StorageRead)),
-        PropsMarker::Normal(zkevm_opcode_defs::Opcode::UMA(UMAOpcode::HeapRead)),
+        PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Nop(NopOpcode)),
+        PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Add(AddOpcode::Add)),
+        PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Sub(SubOpcode::Sub)),
+        PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Mul(MulOpcode)),
+        PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Div(DivOpcode)),
+        PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Jump(JumpOpcode)),
+        PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Ptr(PtrOpcode::Add)),
+        PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Context(
+            ContextOpcode::Caller,
+        )),
+        PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Shift(ShiftOpcode::Shl)),
+        PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Binop(BinopOpcode::Xor)),
+        PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::Log(
+            LogOpcode::StorageRead,
+        )),
+        PropsMarker::Normal(crate::zkevm_opcode_defs::Opcode::UMA(UMAOpcode::HeapRead)),
         PropsMarker::Specialized(SpecializedImplementationPropsMarker::CallRet(
-            zkevm_opcode_defs::NearCallOpcode,
-            zkevm_opcode_defs::FarCallOpcode::Normal,
-            zkevm_opcode_defs::RetOpcode::Ok,
+            crate::zkevm_opcode_defs::NearCallOpcode,
+            crate::zkevm_opcode_defs::FarCallOpcode::Normal,
+            crate::zkevm_opcode_defs::RetOpcode::Ok,
         )),
     ]
 }
 
 impl PartialOpcodePropsMarker for SpecializedImplementationPropsMarker {
     fn can_have_src0_from_mem(&self, version: ISAVersion) -> bool {
-        use zkevm_opcode_defs::OpcodeProps;
+        use crate::zkevm_opcode_defs::OpcodeProps;
 
-        let t0 = zkevm_opcode_defs::NearCallOpcode.can_have_src0_from_mem(version);
-        let t1 = zkevm_opcode_defs::FarCallOpcode::Normal.can_have_src0_from_mem(version);
-        let t2 = zkevm_opcode_defs::RetOpcode::Ok.can_have_src0_from_mem(version);
+        let t0 = crate::zkevm_opcode_defs::NearCallOpcode.can_have_src0_from_mem(version);
+        let t1 = crate::zkevm_opcode_defs::FarCallOpcode::Normal.can_have_src0_from_mem(version);
+        let t2 = crate::zkevm_opcode_defs::RetOpcode::Ok.can_have_src0_from_mem(version);
         assert_eq!(t0, t1);
         assert_eq!(t0, t2);
 
@@ -613,11 +616,12 @@ impl PartialOpcodePropsMarker for SpecializedImplementationPropsMarker {
     }
 
     fn can_write_dst0_into_memory(&self, version: ISAVersion) -> bool {
-        use zkevm_opcode_defs::OpcodeProps;
+        use crate::zkevm_opcode_defs::OpcodeProps;
 
-        let t0 = zkevm_opcode_defs::NearCallOpcode.can_write_dst0_into_memory(version);
-        let t1 = zkevm_opcode_defs::FarCallOpcode::Normal.can_write_dst0_into_memory(version);
-        let t2 = zkevm_opcode_defs::RetOpcode::Ok.can_write_dst0_into_memory(version);
+        let t0 = crate::zkevm_opcode_defs::NearCallOpcode.can_write_dst0_into_memory(version);
+        let t1 =
+            crate::zkevm_opcode_defs::FarCallOpcode::Normal.can_write_dst0_into_memory(version);
+        let t2 = crate::zkevm_opcode_defs::RetOpcode::Ok.can_write_dst0_into_memory(version);
         assert_eq!(t0, t1);
         assert_eq!(t0, t2);
 

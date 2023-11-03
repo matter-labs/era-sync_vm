@@ -3,6 +3,9 @@
 
 pub use franklin_crypto;
 pub use rescue_poseidon;
+pub use zk_evm;
+pub(crate) use zk_evm::zk_evm_abstractions;
+pub(crate) use zk_evm::zkevm_opcode_defs;
 
 use derivative;
 use franklin_crypto::bellman;

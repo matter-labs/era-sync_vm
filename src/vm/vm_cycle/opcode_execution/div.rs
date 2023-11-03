@@ -18,7 +18,7 @@ pub(crate) fn apply<
 ) -> Result<OpcodePartialApplicationResult<E, PropsMarker>, SynthesisError> {
     let n = cs.get_current_aux_gate_number();
 
-    let opcode = zkevm_opcode_defs::Opcode::Div(zkevm_opcode_defs::DivOpcode);
+    let opcode = crate::zkevm_opcode_defs::Opcode::Div(crate::zkevm_opcode_defs::DivOpcode);
     let should_apply = common_opcode_state
         .decoded_opcode
         .properties_bits
@@ -86,15 +86,14 @@ pub(crate) fn apply<
         _marker: std::marker::PhantomData::<E>,
     };
 
+    // by convention we have remainder == 0 if quotient is 0
+    let remainder = remainder.mask(cs, &remainder_is_zero.not())?;
+
     let mut opcode_partial_application = OpcodePartialApplicationResult::default();
     opcode_partial_application.marker = PropsMarker::Normal(opcode);
     opcode_partial_application.applies = should_apply;
     opcode_partial_application.dst0_value = Some((should_apply, quotient));
     opcode_partial_application.dst1_value = Some((should_apply, remainder));
-
-    // let original_flags = common_opcode_state.current_flags;
-    // let preserve_flags_and_execute = smart_and(cs, &[should_apply, should_set_flags.not()])?;
-    // opcode_partial_application.flags.push((preserve_flags_and_execute, original_flags));
 
     // flags for a case if we do not set flags
     let set_flags_and_execute = smart_and(cs, &[should_apply, should_set_flags])?;

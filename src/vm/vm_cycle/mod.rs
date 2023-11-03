@@ -14,7 +14,7 @@ pub mod opcode_execution;
 pub mod pre_state;
 pub mod witness_oracle;
 
-use zkevm_opcode_defs::REGISTERS_COUNT;
+use crate::zkevm_opcode_defs::REGISTERS_COUNT;
 
 pub fn add_bitwise_8x8_table<E: Engine, CS: ConstraintSystem<E>>(
     cs: &mut CS,

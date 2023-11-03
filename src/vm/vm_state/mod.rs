@@ -5,8 +5,8 @@ use crate::vm::vm_cycle::pre_state::*;
 pub mod callstack;
 pub mod execution_context;
 pub mod saved_contract_context;
-use zkevm_opcode_defs::system_params::NUM_SPONGES;
-use zkevm_opcode_defs::MAX_PENDING_CYCLES;
+use crate::zkevm_opcode_defs::system_params::NUM_SPONGES;
+use crate::zkevm_opcode_defs::MAX_PENDING_CYCLES;
 
 use crate::scheduler::queues::decommit_query::*;
 
@@ -24,7 +24,7 @@ use crate::glue::traits::*;
 #[derivative(Clone, Debug)]
 pub struct VmLocalState<E: Engine, const SW: usize> {
     pub previous_code_word: [UInt64<E>; 4],
-    pub registers: [Register<E>; zkevm_opcode_defs::REGISTERS_COUNT],
+    pub registers: [Register<E>; crate::zkevm_opcode_defs::REGISTERS_COUNT],
     pub flags: ArithmeticFlagsPort<E>,
     pub timestamp: UInt32<E>,
     pub memory_page_counter: UInt32<E>,
@@ -101,7 +101,7 @@ impl<E: Engine, const SW: usize> VmLocalState<E, SW> {
 )]
 #[derivative(Clone, Copy, Debug)]
 pub struct VmGlobalState<E: Engine, const SW: usize> {
-    pub registers: [Register<E>; zkevm_opcode_defs::REGISTERS_COUNT],
+    pub registers: [Register<E>; crate::zkevm_opcode_defs::REGISTERS_COUNT],
     pub flags: ArithmeticFlagsPort<E>,
     pub timestamp: UInt32<E>,
     pub memory_page_counter: UInt32<E>,
@@ -122,7 +122,7 @@ pub struct VmGlobalState<E: Engine, const SW: usize> {
 impl<E: Engine, const SW: usize> CircuitEmpty<E> for VmGlobalState<E, SW> {
     fn empty() -> Self {
         Self {
-            registers: [Register::<E>::empty(); zkevm_opcode_defs::REGISTERS_COUNT],
+            registers: [Register::<E>::empty(); crate::zkevm_opcode_defs::REGISTERS_COUNT],
             flags: ArithmeticFlagsPort::empty(),
             timestamp: UInt32::zero(),
             memory_page_counter: UInt32::zero(),

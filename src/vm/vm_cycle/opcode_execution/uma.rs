@@ -6,11 +6,11 @@ use crate::vm::primitives::register_view::*;
 use crate::vm::vm_cycle::memory_view::read_view::*;
 use crate::vm::vm_cycle::memory_view::write_query::*;
 use crate::vm::vm_state::PendingRecord;
+use crate::zkevm_opcode_defs::definitions::uma::*;
 use franklin_crypto::plonk::circuit::hashes_with_tables::blake2s::gadgets::Reg;
 use itertools::Itertools;
 use num_traits::ToPrimitive;
 use std::sync::Arc;
-use zkevm_opcode_defs::definitions::uma::*;
 
 const CELL_BYTE_LEN: u64 = 32;
 
@@ -54,7 +54,7 @@ impl<E: Engine> QuasiFatPtrInUMA<E> {
 
         // check that we agree in logic with out-of-circuit comparisons
         assert_eq!(
-            zkevm_opcode_defs::uma::MAX_OFFSET_TO_DEREF_LOW_U32 + 32u32,
+            crate::zkevm_opcode_defs::uma::MAX_OFFSET_TO_DEREF_LOW_U32 + 32u32,
             u32::MAX
         );
 
@@ -122,11 +122,11 @@ pub(crate) fn apply<
 ) -> Result<OpcodePartialApplicationResult<E, PropsMarker>, SynthesisError> {
     let n = cs.get_current_aux_gate_number();
 
-    let uma_heap_read_opcode = zkevm_opcode_defs::Opcode::UMA(UMAOpcode::HeapRead);
-    let uma_heap_write_opcode = zkevm_opcode_defs::Opcode::UMA(UMAOpcode::HeapWrite);
-    let uma_aux_heap_read_opcode = zkevm_opcode_defs::Opcode::UMA(UMAOpcode::AuxHeapRead);
-    let uma_aux_heap_write_opcode = zkevm_opcode_defs::Opcode::UMA(UMAOpcode::AuxHeapWrite);
-    let uma_fat_ptr_read_opcode = zkevm_opcode_defs::Opcode::UMA(UMAOpcode::FatPointerRead);
+    let uma_heap_read_opcode = crate::zkevm_opcode_defs::Opcode::UMA(UMAOpcode::HeapRead);
+    let uma_heap_write_opcode = crate::zkevm_opcode_defs::Opcode::UMA(UMAOpcode::HeapWrite);
+    let uma_aux_heap_read_opcode = crate::zkevm_opcode_defs::Opcode::UMA(UMAOpcode::AuxHeapRead);
+    let uma_aux_heap_write_opcode = crate::zkevm_opcode_defs::Opcode::UMA(UMAOpcode::AuxHeapWrite);
+    let uma_fat_ptr_read_opcode = crate::zkevm_opcode_defs::Opcode::UMA(UMAOpcode::FatPointerRead);
 
     let should_apply = common_opcode_state
         .decoded_opcode

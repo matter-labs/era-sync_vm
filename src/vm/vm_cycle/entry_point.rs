@@ -1,5 +1,5 @@
-use zkevm_opcode_defs::system_params::BOOTLOADER_FORMAL_ADDRESS_LOW;
-use zkevm_opcode_defs::FatPointer;
+use crate::zkevm_opcode_defs::system_params::BOOTLOADER_FORMAL_ADDRESS_LOW;
+use crate::zkevm_opcode_defs::FatPointer;
 
 use super::*;
 
@@ -227,18 +227,20 @@ pub fn initial_state_for_bootloading<
     let mut ctx = FullExecutionContext::uninitialized();
 
     ctx.saved_context.common_part.base_page =
-        UInt32::from_uint(zkevm_opcode_defs::BOOTLOADER_BASE_PAGE);
+        UInt32::from_uint(crate::zkevm_opcode_defs::BOOTLOADER_BASE_PAGE);
     ctx.saved_context.common_part.code_page =
-        UInt32::from_uint(zkevm_opcode_defs::BOOTLOADER_CODE_PAGE);
+        UInt32::from_uint(crate::zkevm_opcode_defs::BOOTLOADER_CODE_PAGE);
 
     ctx.saved_context.common_part.pc = UInt16::zero();
-    ctx.saved_context.common_part.exception_handler_loc =
-        UInt16::from_uint(zkevm_opcode_defs::system_params::INITIAL_FRAME_FORMAL_EH_LOCATION);
+    ctx.saved_context.common_part.exception_handler_loc = UInt16::from_uint(
+        crate::zkevm_opcode_defs::system_params::INITIAL_FRAME_FORMAL_EH_LOCATION,
+    );
     ctx.saved_context.common_part.ergs_remaining =
-        UInt32::from_uint(zkevm_opcode_defs::system_params::VM_INITIAL_FRAME_ERGS);
+        UInt32::from_uint(crate::zkevm_opcode_defs::system_params::VM_INITIAL_FRAME_ERGS);
 
-    let formal_bootloader_address =
-        u160::from_u64(zkevm_opcode_defs::system_params::BOOTLOADER_FORMAL_ADDRESS_LOW as u64);
+    let formal_bootloader_address = u160::from_u64(
+        crate::zkevm_opcode_defs::system_params::BOOTLOADER_FORMAL_ADDRESS_LOW as u64,
+    );
 
     ctx.saved_context.common_part.code_address = UInt160::from_uint(formal_bootloader_address);
     ctx.saved_context.common_part.this = UInt160::from_uint(formal_bootloader_address);
@@ -254,9 +256,9 @@ pub fn initial_state_for_bootloading<
 
     // bootloader should not pay for resizes
     ctx.saved_context.common_part.heap_upper_bound =
-        UInt32::from_uint(zkevm_opcode_defs::system_params::BOOTLOADER_MAX_MEMORY);
+        UInt32::from_uint(crate::zkevm_opcode_defs::system_params::BOOTLOADER_MAX_MEMORY);
     ctx.saved_context.common_part.aux_heap_upper_bound =
-        UInt32::from_uint(zkevm_opcode_defs::system_params::BOOTLOADER_MAX_MEMORY);
+        UInt32::from_uint(crate::zkevm_opcode_defs::system_params::BOOTLOADER_MAX_MEMORY);
 
     // now push that to the callstack, manually
 
@@ -293,15 +295,16 @@ pub fn initial_state_for_bootloading<
     bootloaded_state.did_call_or_ret_recently = Boolean::constant(true); // we are just at the start
     bootloaded_state.callstack = callstack;
     // timestamp and global counters
-    bootloaded_state.timestamp = UInt32::from_uint(zkevm_opcode_defs::STARTING_TIMESTAMP);
-    bootloaded_state.memory_page_counter = UInt32::from_uint(zkevm_opcode_defs::STARTING_BASE_PAGE);
+    bootloaded_state.timestamp = UInt32::from_uint(crate::zkevm_opcode_defs::STARTING_TIMESTAMP);
+    bootloaded_state.memory_page_counter =
+        UInt32::from_uint(crate::zkevm_opcode_defs::STARTING_BASE_PAGE);
 
     // we also FORMALLY mark r1 as "pointer" type, even though we will NOT have any calldata
     // Nevertheless we put it "formally" to make an empty slice to designated page
 
     let formal_ptr = FatPointer {
         offset: 0,
-        memory_page: zkevm_opcode_defs::BOOTLOADER_CALLDATA_PAGE,
+        memory_page: crate::zkevm_opcode_defs::BOOTLOADER_CALLDATA_PAGE,
         start: 0,
         length: 0,
     };
