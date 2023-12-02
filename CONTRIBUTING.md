@@ -13,7 +13,7 @@ There are many ways to contribute to the ZK Stack:
    issues.
 3. Resolve issues: either by showing an issue isn't a problem and the current state is ok as is or by fixing the problem
    and opening a PR.
-4. Report security issues, see [our security policy](./github/SECURITY.md).
+4. Report security issues, see [our security policy](SECURITY.md).
 5. [Join the team!](https://matterlabs.notion.site/Shape-the-future-of-Ethereum-at-Matter-Labs-dfb3b5a037044bb3a8006af2eb0575e0)
 
 ## Fixing issues
@@ -21,11 +21,11 @@ There are many ways to contribute to the ZK Stack:
 To contribute code fixing issues, please fork the repo, fix an issue, commit, add documentation as per the PR template,
 and the repo's maintainers will review the PR.
 [here](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork)
-for guidance how to work with PRs created from a fork.
+for guidance on how to work with PRs created from a fork.
 
 ## Licenses
 
-If you contribute to this project, your contributions will be made to the project under both Apache 2.0 and the MIT
+If you contribute to this project, your contributions will be made to the project under both Apache 2.0 and MIT
 license.
 
 ## Resources
