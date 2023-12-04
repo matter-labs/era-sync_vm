@@ -4,6 +4,7 @@ use super::input::*;
 use crate::glue::optimizable_queue::FixedWidthEncodingGenericQueue;
 use crate::glue::pubdata_hasher::storage_write_data::ByteSerializable;
 use franklin_crypto::plonk::circuit::hashes_with_tables::keccak::gadgets::*;
+use zkevm_opcode_defs::sha3::{self, Digest};
 
 pub fn hash_pubdata_entry_point_variable_length<
     E: Engine,
@@ -124,7 +125,6 @@ pub fn hash_pubdata_inner<
     // we can precompute special case, which is empty input queue,
     // so we will hash 4x0 bytes
 
-    use sha3::Digest;
     let empty_input_hash = sha3::Keccak256::digest(&[0u8; 4]);
     let mut byte_array = [0u8; 32];
     byte_array.copy_from_slice(empty_input_hash.as_slice());

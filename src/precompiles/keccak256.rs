@@ -85,7 +85,7 @@ use franklin_crypto::plonk::circuit::hashes_with_tables::keccak::gadgets::{
     Keccak256Gadget, KeccakState,
 };
 
-use sha3::Digest;
+use zkevm_opcode_defs::sha3::{self, Digest};
 
 type Keccak256InnerState = [u64; 25];
 
